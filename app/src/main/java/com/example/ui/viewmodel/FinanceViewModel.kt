@@ -42,8 +42,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     val isLoggedIn = MutableStateFlow(prefs.getBoolean("is_logged_in", false))
     val userName = MutableStateFlow(prefs.getString("user_name", "Kiran Kumar") ?: "Kiran Kumar")
     val userEmail = MutableStateFlow(prefs.getString("user_email", "kirankumarsk25820@gmail.com") ?: "kirankumarsk25820@gmail.com")
-    val userPhone = MutableStateFlow(prefs.getString("user_phone", "+1 (555) 234-5678") ?: "+1 (555) 234-5678")
-    val userDob = MutableStateFlow(prefs.getString("user_dob", "1996-08-25") ?: "1996-08-25")
+    val userPhone = MutableStateFlow(prefs.getString("user_phone", "+91 93808 3813") ?: "+91 93808 3813")
+    val userDob = MutableStateFlow(prefs.getString("user_dob", "1999-08-25") ?: "1999-08-25")
+    val userLocation = MutableStateFlow(prefs.getString("user_location", "Bengaluru, India") ?: "Bengaluru, India")
 
     val selectedCurrency = MutableStateFlow(SupportedCurrency.USD)
     val searchQuery = MutableStateFlow("")
@@ -291,12 +292,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         name: String,
         email: String,
         phone: String,
-        dob: String
+        dob: String,
+        location: String
     ) {
         userName.value = name
         userEmail.value = email
         userPhone.value = phone
         userDob.value = dob
+        userLocation.value = location
         isLoggedIn.value = true
 
         prefs.edit()
@@ -305,6 +308,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             .putString("user_email", email)
             .putString("user_phone", phone)
             .putString("user_dob", dob)
+            .putString("user_location", location)
             .apply()
     }
 
@@ -312,18 +316,21 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         name: String,
         email: String,
         phone: String,
-        dob: String
+        dob: String,
+        location: String
     ) {
         userName.value = name
         userEmail.value = email
         userPhone.value = phone
         userDob.value = dob
+        userLocation.value = location
 
         prefs.edit()
             .putString("user_name", name)
             .putString("user_email", email)
             .putString("user_phone", phone)
             .putString("user_dob", dob)
+            .putString("user_location", location)
             .apply()
     }
 

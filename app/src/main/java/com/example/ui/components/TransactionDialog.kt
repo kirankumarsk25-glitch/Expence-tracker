@@ -44,12 +44,13 @@ import androidx.compose.ui.unit.dp
 import com.example.data.model.ExpenseCategory
 import com.example.data.model.SupportedCurrency
 import com.example.data.model.TransactionType
-import com.example.ui.theme.CreditGreen
-import com.example.ui.theme.DebitRed
-import com.example.ui.theme.GoldAccent
-import com.example.ui.theme.SlateSurface
-import com.example.ui.theme.SlateSurfaceVariant
-import com.example.ui.theme.TealPrimary
+import com.example.ui.theme.PolishBackground
+import com.example.ui.theme.PolishCreditGreen
+import com.example.ui.theme.PolishDebitRed
+import com.example.ui.theme.PolishOnBackground
+import com.example.ui.theme.PolishOnPrimary
+import com.example.ui.theme.PolishPrimary
+import com.example.ui.theme.PolishSurfaceVariant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +83,7 @@ fun AddTransactionBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = SlateSurface
+        containerColor = PolishBackground
     ) {
         Column(
             modifier = Modifier
@@ -94,7 +95,7 @@ fun AddTransactionBottomSheet(
                 text = "Log Transaction",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = PolishOnBackground
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -104,16 +105,16 @@ fun AddTransactionBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(SlateSurfaceVariant)
+                    .background(PolishSurfaceVariant)
                     .padding(4.dp)
             ) {
                 TransactionType.entries.forEach { type ->
                     val isSelected = selectedType == type
                     val backgroundColor = if (isSelected) {
                         when (type) {
-                            TransactionType.CREDIT -> CreditGreen
-                            TransactionType.DEBIT -> DebitRed
-                            TransactionType.TRANSFER -> TealPrimary
+                            TransactionType.CREDIT -> PolishCreditGreen
+                            TransactionType.DEBIT -> PolishDebitRed
+                            TransactionType.TRANSFER -> PolishPrimary
                         }
                     } else Color.Transparent
 
@@ -130,7 +131,7 @@ fun AddTransactionBottomSheet(
                             text = type.displayName.split("/").first().trim(),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isSelected) Color.White else PolishOnBackground
                         )
                     }
                 }
@@ -146,7 +147,7 @@ fun AddTransactionBottomSheet(
                 Box {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = SlateSurfaceVariant,
+                        color = PolishSurfaceVariant,
                         modifier = Modifier.clickable { currencyDropdownExpanded = true }
                     ) {
                         Row(
@@ -157,7 +158,7 @@ fun AddTransactionBottomSheet(
                                 text = "${selectedCurrency.code} (${selectedCurrency.symbol})",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = GoldAccent
+                                color = PolishPrimary
                             )
                         }
                     }
@@ -204,8 +205,9 @@ fun AddTransactionBottomSheet(
 
             Text(
                 text = "Select Category",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = PolishOnBackground
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -218,14 +220,14 @@ fun AddTransactionBottomSheet(
                     val isSelected = selectedCategory == category
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) Color(category.colorHex) else SlateSurfaceVariant,
+                        color = if (isSelected) Color(category.colorHex) else PolishSurfaceVariant,
                         modifier = Modifier.clickable { selectedCategory = category }
                     ) {
                         Text(
                             text = category.title,
                             style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else PolishOnBackground,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
@@ -236,8 +238,9 @@ fun AddTransactionBottomSheet(
 
             Text(
                 text = "Payment Method",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = PolishOnBackground
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -247,13 +250,14 @@ fun AddTransactionBottomSheet(
                     val isSelected = paymentMethod == method
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) TealPrimary else SlateSurfaceVariant,
+                        color = if (isSelected) PolishPrimary else PolishSurfaceVariant,
                         modifier = Modifier.clickable { paymentMethod = method }
                     ) {
                         Text(
                             text = method,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) Color.White else PolishOnBackground,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
                     }
@@ -276,7 +280,7 @@ fun AddTransactionBottomSheet(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text("Cancel", color = PolishOnBackground, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -297,9 +301,10 @@ fun AddTransactionBottomSheet(
                             onDismiss()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Save Transaction", fontWeight = FontWeight.Bold)
+                    Text("Save Transaction", fontWeight = FontWeight.Bold, color = PolishOnPrimary)
                 }
             }
         }

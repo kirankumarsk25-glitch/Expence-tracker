@@ -300,11 +300,32 @@ fun LoansTabContent(viewModel: FinanceViewModel) {
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Tap 'New Loan' to track loans taken on behalf of others or personal borrowing.",
+                            text = "Track loans taken on behalf of others or personal borrowing.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Black,
                             fontWeight = FontWeight.Medium
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { showAddLoanSheet = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Loan",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Add Loan / Debt Record",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }

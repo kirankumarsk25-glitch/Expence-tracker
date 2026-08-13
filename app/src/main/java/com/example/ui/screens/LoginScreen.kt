@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -144,7 +145,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Sign In to Access Your Vault",
+                        text = "Secure Google Authentication",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = PolishOnBackground
@@ -153,7 +154,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Connect with Google to sync budgets, loans & portfolio across devices",
+                        text = "Register or sign in with Google Auth. Verified Google profile auto-saves your settings & data per user securely.",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Black,
                         fontWeight = FontWeight.Medium,
@@ -162,14 +163,13 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Google Sign-In Button
+                    // Option 1: Register with Google Auth
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = PolishSurfaceVariant,
-                        border = BorderStroke(1.dp, PolishOutline),
+                        color = PolishPrimary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
+                            .height(54.dp)
                             .clickable { showGoogleAuthDialog = true }
                     ) {
                         Row(
@@ -179,7 +179,6 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            // Custom Google G Icon Badge
                             Surface(
                                 shape = CircleShape,
                                 color = Color.White,
@@ -198,7 +197,52 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             Spacer(modifier = Modifier.width(12.dp))
 
                             Text(
-                                text = "Sign in with Google",
+                                text = "Register via Google Auth",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PolishOnPrimary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Option 2: Sign In with Google Auth
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = PolishSurfaceVariant,
+                        border = BorderStroke(1.dp, PolishOutline),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp)
+                            .clickable { showGoogleAuthDialog = true }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "G",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 18.sp,
+                                        color = Color(0xFF4285F4)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = "Login via Google Auth",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = PolishOnBackground
@@ -214,8 +258,9 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             viewModel.loginWithGoogle(
                                 name = "Guest User",
                                 email = "guest@vaultexpense.app",
-                                phone = "+1 (555) 000-0000",
-                                dob = "2000-01-01"
+                                phone = "+91 98765 43210",
+                                dob = "2000-01-01",
+                                location = "Bengaluru, India"
                             )
                             Toast.makeText(context, "Logged in as Guest User", Toast.LENGTH_SHORT).show()
                         },
@@ -263,10 +308,10 @@ fun LoginScreen(viewModel: FinanceViewModel) {
         GoogleSignInBottomSheet(
             viewModel = viewModel,
             onDismiss = { showGoogleAuthDialog = false },
-            onSuccess = { name, email, phone, dob ->
-                viewModel.loginWithGoogle(name, email, phone, dob)
+            onSuccess = { name, email, phone, dob, location ->
+                viewModel.loginWithGoogle(name, email, phone, dob, location)
                 showGoogleAuthDialog = false
-                Toast.makeText(context, "Signed in successfully as $name", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Signed in via Google as $name", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -277,7 +322,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 fun GoogleSignInBottomSheet(
     viewModel: FinanceViewModel,
     onDismiss: () -> Unit,
-    onSuccess: (name: String, email: String, phone: String, dob: String) -> Unit
+    onSuccess: (name: String, email: String, phone: String, dob: String, location: String) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -285,6 +330,7 @@ fun GoogleSignInBottomSheet(
     var email by remember { mutableStateOf(viewModel.userEmail.value) }
     var phone by remember { mutableStateOf(viewModel.userPhone.value) }
     var dob by remember { mutableStateOf(viewModel.userDob.value) }
+    var location by remember { mutableStateOf(viewModel.userLocation.value) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -398,12 +444,23 @@ fun GoogleSignInBottomSheet(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text("Location (Auto-saved to database)") },
+                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = PolishPrimary) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
                     if (name.isNotBlank() && email.isNotBlank()) {
-                        onSuccess(name, email, phone, dob)
+                        onSuccess(name, email, phone, dob, location.ifBlank { "Bengaluru, India" })
                     }
                 },
                 modifier = Modifier

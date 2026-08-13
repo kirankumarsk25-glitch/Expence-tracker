@@ -37,10 +37,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.data.model.ExpenseCategory
-import com.example.ui.theme.GoldAccent
-import com.example.ui.theme.SlateSurface
-import com.example.ui.theme.SlateSurfaceVariant
-import com.example.ui.theme.TealPrimary
+import com.example.ui.theme.PolishBackground
+import com.example.ui.theme.PolishOnBackground
+import com.example.ui.theme.PolishOnPrimary
+import com.example.ui.theme.PolishPrimary
+import com.example.ui.theme.PolishSurfaceVariant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +60,7 @@ fun SetBudgetBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = SlateSurface
+        containerColor = PolishBackground
     ) {
         Column(
             modifier = Modifier
@@ -70,15 +71,16 @@ fun SetBudgetBottomSheet(
                 text = "Set Category Budget Limit",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = PolishOnBackground
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "Category",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = PolishOnBackground
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -88,14 +90,14 @@ fun SetBudgetBottomSheet(
                     val isSelected = selectedCategory == category
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) Color(category.colorHex) else SlateSurfaceVariant,
+                        color = if (isSelected) Color(category.colorHex) else PolishSurfaceVariant,
                         modifier = Modifier.clickable { selectedCategory = category }
                     ) {
                         Text(
                             text = category.title,
                             style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else PolishOnBackground,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
@@ -124,20 +126,21 @@ fun SetBudgetBottomSheet(
                     Text(
                         text = "Real-Time Push Notifications",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.Bold,
+                        color = PolishOnBackground
                     )
                     Text(
                         text = "Alert when spending reaches 80% or exceeds limit",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
                 Switch(
                     checked = isAlertEnabled,
                     onCheckedChange = { isAlertEnabled = it },
-                    colors = SwitchDefaults.colors(checkedThumbColor = GoldAccent, checkedTrackColor = TealPrimary)
+                    colors = SwitchDefaults.colors(checkedThumbColor = PolishPrimary, checkedTrackColor = PolishSurfaceVariant)
                 )
             }
 
@@ -148,7 +151,7 @@ fun SetBudgetBottomSheet(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text("Cancel", color = PolishOnBackground, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -161,9 +164,10 @@ fun SetBudgetBottomSheet(
                             onDismiss()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Save Budget Limit", fontWeight = FontWeight.Bold)
+                    Text("Save Budget Limit", fontWeight = FontWeight.Bold, color = PolishOnPrimary)
                 }
             }
         }

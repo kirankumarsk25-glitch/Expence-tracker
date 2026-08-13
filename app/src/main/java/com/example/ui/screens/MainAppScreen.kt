@@ -90,6 +90,7 @@ import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Save
@@ -730,11 +731,13 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
     val currentEmail by viewModel.userEmail.collectAsState()
     val currentPhone by viewModel.userPhone.collectAsState()
     val currentDob by viewModel.userDob.collectAsState()
+    val currentLocation by viewModel.userLocation.collectAsState()
 
     var nameInput by remember(currentName) { mutableStateOf(currentName) }
     var emailInput by remember(currentEmail) { mutableStateOf(currentEmail) }
     var phoneInput by remember(currentPhone) { mutableStateOf(currentPhone) }
     var dobInput by remember(currentDob) { mutableStateOf(currentDob) }
+    var locationInput by remember(currentLocation) { mutableStateOf(currentLocation) }
 
     LazyColumn(
         modifier = Modifier
@@ -888,12 +891,23 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = locationInput,
+                        onValueChange = { locationInput = it },
+                        label = { Text("Location (Auto-saved)") },
+                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = PolishPrimary) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = {
-                            viewModel.updateUserProfile(nameInput, emailInput, phoneInput, dobInput)
-                            Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                            viewModel.updateUserProfile(nameInput, emailInput, phoneInput, dobInput, locationInput)
+                            Toast.makeText(context, "Profile & location updated in database!", Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
                         shape = RoundedCornerShape(12.dp),
