@@ -1,0 +1,6 @@
+{
+  "name": "Vault Expense",
+  "description": "Comprehensive finance manager for credit/debit tracking, expenditures, multi-currency support, budget alerts, biometric authentication, interactive charts, and cloud sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
