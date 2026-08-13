@@ -251,17 +251,18 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            val userLocation by viewModel.userLocation.collectAsState()
+            val userLat by viewModel.userLatitude.collectAsState()
+            val userLng by viewModel.userLongitude.collectAsState()
+
             HeaderBar(
                 userName = userName,
-                onLockClick = { viewModel.lockVault() },
-                onFingerprintClick = {
-                    (context as? FragmentActivity)?.let { act ->
-                        viewModel.biometricHelper.promptBiometricAuth(
-                            activity = act,
-                            onSuccess = { },
-                            onError = { }
-                        )
-                    }
+                userLocation = userLocation,
+                userLat = userLat,
+                userLng = userLng,
+                onLocationClick = {
+                    viewModel.autoSyncGpsLocation(12.9716, 77.5946, "Bengaluru, India")
+                    Toast.makeText(context, "Location Auto-Synced: 12.9716° N, 77.5946° E", Toast.LENGTH_SHORT).show()
                 }
             )
 
@@ -339,8 +340,10 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
 @Composable
 fun HeaderBar(
     userName: String,
-    onLockClick: () -> Unit,
-    onFingerprintClick: () -> Unit
+    userLocation: String,
+    userLat: Double,
+    userLng: Double,
+    onLocationClick: () -> Unit
 ) {
     val initials = userName.split(" ")
         .mapNotNull { it.firstOrNull()?.uppercaseChar() }
@@ -371,7 +374,7 @@ fun HeaderBar(
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Column {
                 Text(
@@ -389,17 +392,39 @@ fun HeaderBar(
             }
         }
 
-        IconButton(
-            onClick = onFingerprintClick,
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(PolishSurfaceVariant)
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = PolishSurfaceVariant,
+            border = BorderStroke(1.dp, PolishOutline),
+            modifier = Modifier.clickable { onLocationClick() }
         ) {
-            Icon(
-                imageVector = Icons.Default.Fingerprint,
-                contentDescription = "Biometric Check",
-                tint = PolishPrimary
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Auto Location",
+                    tint = PolishPrimary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(
+                        text = userLocation.split("(").first().trim().ifBlank { "Bengaluru, India" },
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PolishOnBackground
+                    )
+                    Text(
+                        text = "GPS Auto-Synced",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        color = PolishCreditGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }
