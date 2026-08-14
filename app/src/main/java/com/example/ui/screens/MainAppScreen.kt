@@ -223,11 +223,18 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
                         selected = isSelected,
                         onClick = { activeTab = tab },
                         icon = { Icon(imageVector = tab.icon, contentDescription = tab.title) },
-                        label = { Text(tab.title) },
+                        label = {
+                            Text(
+                                text = tab.title,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = PolishOnPrimary,
+                            selectedTextColor = PolishPrimary,
                             indicatorColor = PolishPrimary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            unselectedIconColor = Color(0xFF49454F),
+                            unselectedTextColor = Color(0xFF49454F)
                         )
                     )
                 }
@@ -400,24 +407,24 @@ fun HeaderBar(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Auto Location",
                     tint = PolishPrimary,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Column {
                     Text(
-                        text = userLocation.split("(").first().trim().ifBlank { "Bengaluru, India" },
+                        text = userLocation.split("(").first().trim(),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = PolishOnBackground
                     )
                     Text(
-                        text = "GPS Auto-Synced",
+                        text = "${String.format("%.2f", userLat)}°, ${String.format("%.2f", userLng)}° GPS",
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 10.sp,
                         color = PolishCreditGreen,
@@ -486,7 +493,8 @@ fun HomeTabContent(
                             Text(
                                 text = "Budget Tracking",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = PolishOnBackground
                             )
                         }
 
@@ -519,12 +527,14 @@ fun HomeTabContent(
                         Text(
                             text = "Used: ${summary.activeCurrency.symbol}%.2f".format(totalDebitUsd * summary.activeCurrency.rateToUsd),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF49454F),
+                            fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = "Limit: ${summary.activeCurrency.symbol}%.2f".format(totalBudgetUsd * summary.activeCurrency.rateToUsd),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF49454F),
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -542,7 +552,8 @@ fun HomeTabContent(
                 Text(
                     text = "Recent Transactions",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = PolishOnBackground
                 )
 
                 TextButton(onClick = onSeeAllTransactions) {
@@ -586,12 +597,14 @@ fun BudgetsTabContent(
                     Text(
                         text = "Category Budgets",
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = PolishOnBackground
                     )
                     Text(
                         text = "Real-time notifications trigger when thresholds are reached",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF49454F),
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
@@ -654,12 +667,14 @@ fun BudgetsTabContent(
                                 Text(
                                     text = category.title,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = PolishOnBackground
                                 )
                                 Text(
                                     text = if (limitUsd > 0) "$percent% of monthly budget" else "No budget set",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color(0xFF49454F),
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -675,7 +690,8 @@ fun BudgetsTabContent(
                                 Text(
                                     text = "/ ${summary.activeCurrency.symbol}%.2f".format(limitUsd * summary.activeCurrency.rateToUsd),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color(0xFF49454F),
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }

@@ -97,8 +97,6 @@ fun LoginScreen(viewModel: FinanceViewModel) {
     var regDob by remember { mutableStateOf("1999-08-25") }
     var regPassword by remember { mutableStateOf("") }
     var regConfirmPassword by remember { mutableStateOf("") }
-    var generatedOtp by remember { mutableStateOf<String?>(null) }
-    var enteredOtp by remember { mutableStateOf("") }
     var registerError by remember { mutableStateOf<String?>(null) }
 
     Surface(
@@ -378,7 +376,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                         )
 
                         Text(
-                            text = "Complete details & verify OTP sent to Email & Mobile.",
+                            text = "Create your secure account to manage your finances.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Black,
                             fontWeight = FontWeight.Medium,
@@ -464,143 +462,41 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        if (generatedOtp == null) {
-                            Button(
-                                onClick = {
-                                    if (regName.isBlank() || regEmail.isBlank() || regPhone.isBlank() || regPassword.isBlank()) {
-                                        registerError = "Please fill in all mandatory profile fields!"
-                                    } else if (regPassword != regConfirmPassword) {
-                                        registerError = "Passwords do not match! Please check Re-verify Password field."
-                                    } else {
-                                        val code = viewModel.generateSixDigitOtp()
-                                        generatedOtp = code
-                                        registerError = null
-                                        Toast.makeText(
-                                            context,
-                                            "📲 [SMS & Email Dispatched]\nVerification code sent to $regPhone and $regEmail!\n(Demo OTP Code: $code)",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
-                                shape = RoundedCornerShape(14.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                            ) {
-                                Text(
-                                    text = "Send OTP to Mobile & Email",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PolishOnPrimary
-                                )
-                            }
-                        } else {
-                            // OTP Input Stage
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = PolishSurfaceVariant,
-                                border = BorderStroke(1.dp, PolishOutline),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 12.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = PolishCreditGreen, modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(text = "OTP Dispatched to Mobile & Email", color = PolishOnBackground, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                    }
-                                    Text(
-                                        text = "Check SMS at +91 ${regPhone.takeLast(10)} or Inbox at ${regEmail.take(3)}***@***",
-                                        color = Color.Black,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 11.sp,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
-                                }
-                            }
-
-                            OutlinedTextField(
-                                value = enteredOtp,
-                                onValueChange = { enteredOtp = it; registerError = null },
-                                label = { Text("Enter 6-Digit OTP Received") },
-                                leadingIcon = { Icon(Icons.Default.Key, contentDescription = null, tint = PolishPrimary) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                TextButton(
-                                    onClick = {
-                                        val newCode = viewModel.generateSixDigitOtp()
-                                        generatedOtp = newCode
-                                        registerError = null
-                                        Toast.makeText(
-                                            context,
-                                            "📲 Resent OTP to $regPhone & $regEmail!\n(Demo OTP Code: $newCode)",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                ) {
-                                    Text("Resend OTP", color = PolishPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                }
-
-                                TextButton(
-                                    onClick = {
-                                        generatedOtp = null
-                                        enteredOtp = ""
-                                    }
-                                ) {
-                                    Text("Change Mobile / Email", color = Color.Gray, fontWeight = FontWeight.Medium, fontSize = 12.sp)
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Button(
-                                onClick = {
-                                    val err = viewModel.registerWithOtp(
+                        Button(
+                            onClick = {
+                                if (regName.isBlank() || regEmail.isBlank() || regPhone.isBlank() || regPassword.isBlank()) {
+                                    registerError = "Please fill in all mandatory profile fields!"
+                                } else if (regPassword != regConfirmPassword) {
+                                    registerError = "Passwords do not match! Please check Re-verify Password field."
+                                } else {
+                                    val err = viewModel.registerUser(
                                         name = regName,
                                         email = regEmail,
                                         phone = regPhone,
                                         dob = regDob,
-                                        password = regPassword,
-                                        enteredOtp = enteredOtp,
-                                        generatedOtp = generatedOtp ?: ""
+                                        password = regPassword
                                     )
                                     if (err != null) {
                                         registerError = err
                                     } else {
                                         Toast.makeText(context, "Registration Successful! Profile & Auto-Location Presynced.", Toast.LENGTH_LONG).show()
                                     }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = PolishCreditGreen),
-                                shape = RoundedCornerShape(14.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                            ) {
-                                Text(
-                                    text = "Verify OTP & Complete Registration",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                        ) {
+                            Text(
+                                text = "Create & Register Account",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PolishOnPrimary
+                            )
                         }
                     }
 

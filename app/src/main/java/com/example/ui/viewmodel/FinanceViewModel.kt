@@ -341,7 +341,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun autoSyncGpsLocation(lat: Double = 12.9716, lng: Double = 77.5946, cityName: String = "Bengaluru, India") {
         userLatitude.value = lat
         userLongitude.value = lng
-        userLocation.value = cityName.split("(").first().trim()
+        userLocation.value = "$cityName (${String.format("%.4f", lat)}°N, ${String.format("%.4f", lng)}°E)"
 
         prefs.edit()
             .putFloat("user_lat", lat.toFloat())
@@ -366,17 +366,15 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun registerWithOtp(
+    fun registerUser(
         name: String,
         email: String,
         phone: String,
         dob: String,
-        password: String,
-        enteredOtp: String,
-        generatedOtp: String
+        password: String
     ): String? {
-        if (enteredOtp.trim() != generatedOtp.trim()) {
-            return "Invalid OTP entered! Verification failed."
+        if (name.isBlank() || email.isBlank() || phone.isBlank() || password.isBlank()) {
+            return "Please fill in all mandatory fields!"
         }
 
         userName.value = name
@@ -398,10 +396,6 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             .apply()
 
         return null // Null error means registration success!
-    }
-
-    fun generateSixDigitOtp(): String {
-        return (100000..999999).random().toString()
     }
 
     fun logout() {

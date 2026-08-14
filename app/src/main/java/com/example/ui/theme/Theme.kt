@@ -11,24 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = TealSecondary,
-    onPrimary = SlateDarkBackground,
-    primaryContainer = TealPrimary,
-    onPrimaryContainer = TextPrimaryDark,
-    secondary = GoldAccent,
-    onSecondary = SlateDarkBackground,
-    background = SlateDarkBackground,
-    onBackground = TextPrimaryDark,
-    surface = SlateSurface,
-    onSurface = TextPrimaryDark,
-    surfaceVariant = SlateSurfaceVariant,
-    onSurfaceVariant = TextSecondaryDark,
-    error = DebitRed,
-    onError = TextPrimaryDark
-)
-
-private val LightColorScheme = lightColorScheme(
+private val PolishColorScheme = lightColorScheme(
     primary = PolishPrimary,
     onPrimary = PolishOnPrimary,
     primaryContainer = PolishPrimaryContainer,
@@ -40,28 +23,20 @@ private val LightColorScheme = lightColorScheme(
     surface = PolishSurface,
     onSurface = PolishOnSurface,
     surfaceVariant = PolishSurfaceVariant,
-    onSurfaceVariant = Color(0xFF1D1B1E), // Solid dark black subtext
+    onSurfaceVariant = Color(0xFF49454F), // High contrast dark grey subtext
+    outline = PolishOutline,
     error = PolishDebitRed,
     onError = Color.White
 )
 
 @Composable
 fun VaultExpenseTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = PolishColorScheme,
         typography = Typography,
         content = content
     )
