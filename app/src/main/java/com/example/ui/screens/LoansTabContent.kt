@@ -94,234 +94,232 @@ fun LoansTabContent(viewModel: FinanceViewModel) {
         .sumOf { it.amountUsd }
     val balanceOthersOwe = (othersPrincipal - othersSent).coerceAtLeast(0.0)
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Loan & Debt Tracker",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = PolishOnBackground
-                    )
-                    Text(
-                        text = "Track loans taken for others, monthly payments sent & remaining balances",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Black, // High contrast black subtext
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(
-                        shape = CircleShape,
-                        color = PolishPrimaryContainer,
-                        modifier = Modifier.clickable { showCalculatorSheet = true }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Calculate,
-                                contentDescription = "Loan Calculator",
-                                tint = PolishPrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Calculator",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = PolishPrimary
-                            )
-                        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(
+                            text = "Loan & Debt Tracker",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PolishOnBackground
+                        )
+                        Text(
+                            text = "Track loans taken for others, monthly payments sent & remaining balances",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Black,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
 
-                    Surface(
-                        shape = CircleShape,
-                        color = PolishPrimary,
-                        modifier = Modifier.clickable { showAddLoanSheet = true }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Surface(
+                            shape = CircleShape,
+                            color = PolishPrimaryContainer,
+                            modifier = Modifier.clickable { showCalculatorSheet = true }
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add Loan",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "New Loan",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // Summary Hero Card for Loans
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = PolishPrimaryContainer),
-                border = BorderStroke(1.dp, PolishOutline)
-            ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text(
-                        text = "OVERALL LOAN PORTFOLIO",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black // Solid black for readability
-                    )
-
-                    Text(
-                        text = "${currency.symbol}%.2f".format(totalLoansPrincipal * currency.rateToUsd),
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = PolishPrimary
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = PolishSurface
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
-                                    Text(
-                                        text = "Others Have To Give Me",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                    Text(
-                                        text = "${currency.symbol}%.2f".format(balanceOthersOwe * currency.rateToUsd),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = PolishCreditGreen
-                                    )
-                                }
-
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "Total Repayments Sent",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                    Text(
-                                        text = "${currency.symbol}%.2f".format(totalSentSoFar * currency.rateToUsd),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = PolishPrimary
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Total Balance Left on Loans:",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black
+                                Icon(
+                                    imageVector = Icons.Default.Calculate,
+                                    contentDescription = "Loan Calculator",
+                                    tint = PolishPrimary,
+                                    modifier = Modifier.size(18.dp)
                                 )
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "${currency.symbol}%.2f".format(totalRemainingBalance * currency.rateToUsd),
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = "Calc",
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = PolishDebitRed
+                                    color = PolishPrimary
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = CircleShape,
+                            color = PolishPrimary,
+                            modifier = Modifier.clickable { showAddLoanSheet = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add Loan",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Add Loan",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
                                 )
                             }
                         }
                     }
                 }
             }
-        }
 
-        item {
-            Text(
-                text = "Active Loan Accounts",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = PolishOnBackground,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
-
-        if (loans.isEmpty()) {
+            // Summary Hero Card for Loans
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = PolishSurface),
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = PolishPrimaryContainer),
                     border = BorderStroke(1.dp, PolishOutline)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Column(modifier = Modifier.padding(18.dp)) {
                         Text(
-                            text = "No Loans or Debt Records",
+                            text = "OVERALL LOAN PORTFOLIO",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+
+                        Text(
+                            text = "${currency.symbol}%.2f".format(totalLoansPrincipal * currency.rateToUsd),
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = PolishPrimary
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = PolishSurface
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Others Have To Give Me",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black
+                                        )
+                                        Text(
+                                            text = "${currency.symbol}%.2f".format(balanceOthersOwe * currency.rateToUsd),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PolishCreditGreen
+                                        )
+                                    }
+
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            text = "Total Repayments Sent",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black
+                                        )
+                                        Text(
+                                            text = "${currency.symbol}%.2f".format(totalSentSoFar * currency.rateToUsd),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PolishPrimary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Total Balance Left on Loans:",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    )
+                                    Text(
+                                        text = "${currency.symbol}%.2f".format(totalRemainingBalance * currency.rateToUsd),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PolishDebitRed
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Active Loan Accounts",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = PolishOnBackground
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Track loans taken on behalf of others or personal borrowing.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Black,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { showAddLoanSheet = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.fillMaxWidth()
+                        if (loans.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = PolishPrimaryContainer
+                            ) {
+                                Text(
+                                    text = "${loans.size}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PolishPrimary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PolishPrimary,
+                        modifier = Modifier.clickable { showAddLoanSheet = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = "Add Loan",
+                                contentDescription = "Add Loan Account",
                                 tint = Color.White,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Add Loan / Debt Record",
-                                style = MaterialTheme.typography.titleMedium,
+                                text = "Add Account",
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
@@ -329,23 +327,103 @@ fun LoansTabContent(viewModel: FinanceViewModel) {
                     }
                 }
             }
-        } else {
-            items(loans) { loan ->
-                val loanPayments = allPayments.filter { it.loanId == loan.id }
-                val totalSentForLoan = loanPayments.sumOf { it.amountUsd }
-                val remainingLoanBalance = (loan.totalPrincipalUsd - totalSentForLoan).coerceAtLeast(0.0)
 
-                LoanCardItem(
-                    loan = loan,
-                    payments = loanPayments,
-                    totalSent = totalSentForLoan,
-                    remainingBalance = remainingLoanBalance,
-                    currencySymbol = currency.symbol,
-                    currencyRate = currency.rateToUsd,
-                    onRecordPayment = { selectedLoanForPayment = loan },
-                    onDeleteLoan = { viewModel.deleteLoan(loan.id) },
-                    onDeletePayment = { paymentId -> viewModel.deleteLoanPayment(paymentId) }
-                )
+            if (loans.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = PolishSurface),
+                        border = BorderStroke(1.dp, PolishOutline)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "No Loans or Debt Records",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PolishOnBackground
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Track loans taken on behalf of others or personal borrowing.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { showAddLoanSheet = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                                shape = RoundedCornerShape(14.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add Loan",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Add Loan / Debt Record",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                items(loans) { loan ->
+                    val loanPayments = allPayments.filter { it.loanId == loan.id }
+                    val totalSentForLoan = loanPayments.sumOf { it.amountUsd }
+                    val remainingLoanBalance = (loan.totalPrincipalUsd - totalSentForLoan).coerceAtLeast(0.0)
+
+                    LoanCardItem(
+                        loan = loan,
+                        payments = loanPayments,
+                        totalSent = totalSentForLoan,
+                        remainingBalance = remainingLoanBalance,
+                        currencySymbol = currency.symbol,
+                        currencyRate = currency.rateToUsd,
+                        onRecordPayment = { selectedLoanForPayment = loan },
+                        onDeleteLoan = { viewModel.deleteLoan(loan.id) },
+                        onDeletePayment = { paymentId -> viewModel.deleteLoanPayment(paymentId) }
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { showAddLoanSheet = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Another Loan",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "+ Add Another Loan Account",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
             }
         }
     }

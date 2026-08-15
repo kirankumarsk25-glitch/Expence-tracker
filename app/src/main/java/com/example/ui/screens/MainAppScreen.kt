@@ -42,6 +42,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -743,10 +744,18 @@ fun StatsTabContent(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.setSearchQuery(it) },
-                    placeholder = { Text("Search transactions, notes...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    placeholder = { Text("Search transactions, notes...", color = Color(0xFF79747E)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PolishPrimary) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedContainerColor = PolishSurface,
+                        unfocusedContainerColor = PolishSurface,
+                        focusedBorderColor = PolishPrimary,
+                        unfocusedBorderColor = PolishOutline
+                    )
                 )
             }
         }
@@ -1180,7 +1189,8 @@ fun TransactionRowItem(
                     Text(
                         text = "${category.title} • $formattedDate",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF49454F),
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -1196,7 +1206,8 @@ fun TransactionRowItem(
                     Text(
                         text = tx.paymentMethod,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF49454F),
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
@@ -1204,7 +1215,7 @@ fun TransactionRowItem(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = Color(0xFF79747E),
                         modifier = Modifier.size(18.dp)
                     )
                 }

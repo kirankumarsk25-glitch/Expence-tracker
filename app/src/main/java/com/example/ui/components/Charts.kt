@@ -3,6 +3,7 @@ package com.example.ui.components
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,10 +48,12 @@ import com.example.data.local.TransactionEntity
 import com.example.data.model.ExpenseCategory
 import com.example.data.model.SupportedCurrency
 import com.example.data.model.TransactionType
-import com.example.ui.theme.CreditGreen
-import com.example.ui.theme.DebitRed
-import com.example.ui.theme.GoldAccent
-import com.example.ui.theme.SlateSurface
+import com.example.ui.theme.PolishCreditGreen
+import com.example.ui.theme.PolishDebitRed
+import com.example.ui.theme.PolishOnBackground
+import com.example.ui.theme.PolishOutline
+import com.example.ui.theme.PolishPrimary
+import com.example.ui.theme.PolishSurface
 import kotlin.math.atan2
 
 data class CategorySliceData(
@@ -89,7 +92,8 @@ fun SpendingCategoryDonutChart(
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SlateSurface)
+        colors = CardDefaults.cardColors(containerColor = PolishSurface),
+        border = BorderStroke(1.dp, PolishOutline)
     ) {
         Column(
             modifier = Modifier
@@ -100,7 +104,7 @@ fun SpendingCategoryDonutChart(
                 text = "Expenditure Breakdown",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = PolishOnBackground
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -115,7 +119,7 @@ fun SpendingCategoryDonutChart(
                     Text(
                         text = "No expenses logged yet",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF49454F)
                     )
                 }
             } else {
@@ -190,7 +194,8 @@ fun SpendingCategoryDonutChart(
                             Text(
                                 text = activeSlice.category.title,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color(0xFF49454F),
+                                fontWeight = FontWeight.Medium
                             )
                             Text(
                                 text = "${currency.symbol}%.2f".format(activeSlice.totalAmount),
@@ -201,19 +206,21 @@ fun SpendingCategoryDonutChart(
                             Text(
                                 text = "%.1f%%".format(activeSlice.percentage),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = GoldAccent
+                                color = PolishPrimary,
+                                fontWeight = FontWeight.Bold
                             )
                         } else {
                             Text(
                                 text = "TOTAL DEBIT",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color(0xFF49454F),
+                                fontWeight = FontWeight.Medium
                             )
                             Text(
                                 text = "${currency.symbol}%.2f".format(totalDebitUsd * currency.rateToUsd),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = PolishOnBackground
                             )
                         }
                     }
@@ -246,7 +253,8 @@ fun SpendingCategoryDonutChart(
                                 Text(
                                     text = slice.category.title,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = PolishOnBackground,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
 
@@ -254,7 +262,7 @@ fun SpendingCategoryDonutChart(
                                 Text(
                                     text = "%.1f%%".format(slice.percentage),
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = Color(0xFF49454F),
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -262,7 +270,7 @@ fun SpendingCategoryDonutChart(
                                     text = "${currency.symbol}%.2f".format(slice.totalAmount),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = PolishOnBackground
                                 )
                             }
                         }
@@ -306,14 +314,15 @@ fun CashFlowBarChart(
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SlateSurface)
+        colors = CardDefaults.cardColors(containerColor = PolishSurface),
+        border = BorderStroke(1.dp, PolishOutline)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Credit vs Debit Comparison",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = PolishOnBackground
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -337,7 +346,7 @@ fun CashFlowBarChart(
                         Text(
                             text = "${currency.symbol}%.0f".format(totalCredit),
                             style = MaterialTheme.typography.labelSmall,
-                            color = CreditGreen,
+                            color = PolishCreditGreen,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(6.dp))
@@ -346,13 +355,14 @@ fun CashFlowBarChart(
                                 .width(40.dp)
                                 .height((120 * animatedCredit).dp)
                                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                                .background(CreditGreen)
+                                .background(PolishCreditGreen)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Credits",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF49454F),
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
@@ -364,7 +374,7 @@ fun CashFlowBarChart(
                         Text(
                             text = "${currency.symbol}%.0f".format(totalDebit),
                             style = MaterialTheme.typography.labelSmall,
-                            color = DebitRed,
+                            color = PolishDebitRed,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(6.dp))
@@ -373,13 +383,14 @@ fun CashFlowBarChart(
                                 .width(40.dp)
                                 .height((120 * animatedDebit).dp)
                                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                                .background(DebitRed)
+                                .background(PolishDebitRed)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Debits",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF49454F),
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }

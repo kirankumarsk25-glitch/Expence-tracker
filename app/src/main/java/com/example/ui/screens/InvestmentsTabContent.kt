@@ -103,7 +103,7 @@ fun InvestmentsTabContent(viewModel: FinanceViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                     Text(
                         text = "Investment Portfolio",
                         style = MaterialTheme.typography.headlineSmall,
@@ -231,13 +231,45 @@ fun InvestmentsTabContent(viewModel: FinanceViewModel) {
         }
 
         item {
-            Text(
-                text = "Holdings & Assets (${investments.size})",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = PolishOnBackground,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Holdings & Assets (${investments.size})",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PolishOnBackground
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = PolishPrimary,
+                    modifier = Modifier.clickable { showAddInvestmentSheet = true }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Holding",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Add Holding",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
         }
 
         if (investments.isEmpty()) {
@@ -267,6 +299,27 @@ fun InvestmentsTabContent(viewModel: FinanceViewModel) {
                             color = Color.Black,
                             fontWeight = FontWeight.Medium
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { showAddInvestmentSheet = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Holding",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Add Investment Holding",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -279,6 +332,33 @@ fun InvestmentsTabContent(viewModel: FinanceViewModel) {
                     onUpdateValue = { selectedInvestmentToUpdate = inv },
                     onDelete = { viewModel.deleteInvestment(inv.id) }
                 )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { showAddInvestmentSheet = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Holding",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "+ Add Another Investment Holding",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
