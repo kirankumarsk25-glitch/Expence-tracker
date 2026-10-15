@@ -452,7 +452,11 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
 
     fun setProfilePhoto(uri: String?) {
         userProfilePhotoUri.value = uri
-        prefs.edit().putString("user_photo_uri", uri).apply()
+        if (uri.isNullOrBlank()) {
+            prefs.edit().remove("user_photo_uri").apply()
+        } else {
+            prefs.edit().putString("user_photo_uri", uri).apply()
+        }
     }
 
     fun addBankAccount(bankName: String, accountNumber: String, ifscCode: String, accountType: String = "Savings") {

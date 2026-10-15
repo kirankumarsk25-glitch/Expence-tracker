@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,6 +23,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -560,9 +563,15 @@ fun AddInvestmentBottomSheet(
     var investedText by remember { mutableStateOf("") }
     var currentValText by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            onDismiss()
+        },
         sheetState = sheetState,
         containerColor = PolishBackground
     ) {
@@ -570,6 +579,7 @@ fun AddInvestmentBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
@@ -670,7 +680,13 @@ fun AddInvestmentBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onDismiss()
+                    }
+                ) {
                     Text("Cancel", color = PolishOnBackground)
                 }
 
@@ -678,6 +694,8 @@ fun AddInvestmentBottomSheet(
 
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         val invested = investedText.toDoubleOrNull() ?: 0.0
                         val current = currentValText.toDoubleOrNull() ?: invested
                         if (title.isNotBlank() && invested > 0) {
@@ -703,9 +721,15 @@ fun UpdateInvestmentValueBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var currentValText by remember { mutableStateOf(investment.currentValueUsd.toString()) }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            onDismiss()
+        },
         sheetState = sheetState,
         containerColor = PolishBackground
     ) {
@@ -713,6 +737,7 @@ fun UpdateInvestmentValueBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp)
+                .imePadding()
         ) {
             Text(
                 text = "Update Market Value",
@@ -747,7 +772,13 @@ fun UpdateInvestmentValueBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onDismiss()
+                    }
+                ) {
                     Text("Cancel", color = PolishOnBackground)
                 }
 
@@ -755,6 +786,8 @@ fun UpdateInvestmentValueBottomSheet(
 
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         val newVal = currentValText.toDoubleOrNull() ?: 0.0
                         if (newVal >= 0) {
                             onSubmit(newVal)

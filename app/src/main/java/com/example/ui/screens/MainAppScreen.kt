@@ -18,9 +18,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -108,7 +111,9 @@ import com.example.data.model.StoredDocument
 import com.example.data.model.SupportedCurrency
 import com.example.data.model.TransactionType
 import com.example.ui.components.AddTransactionBottomSheet
+import com.example.ui.components.ChangeProfilePhotoBottomSheet
 import com.example.ui.components.HeroNetBalanceCard
+import com.example.ui.components.ProfileAvatarView
 import com.example.ui.components.SetBudgetBottomSheet
 import com.example.ui.theme.PolishBackground
 import com.example.ui.theme.PolishCreditGreen
@@ -288,16 +293,19 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
             val userLocation by viewModel.userLocation.collectAsState()
             val userLat by viewModel.userLatitude.collectAsState()
             val userLng by viewModel.userLongitude.collectAsState()
+            val profilePhotoUri by viewModel.userProfilePhotoUri.collectAsState()
 
             HeaderBar(
                 userName = userName,
+                profilePhotoUri = profilePhotoUri,
                 userLocation = userLocation,
                 userLat = userLat,
                 userLng = userLng,
                 onLocationClick = {
                     viewModel.autoSyncGpsLocation(12.9716, 77.5946, "Bengaluru, India")
                     Toast.makeText(context, "Location Auto-Synced: 12.9716° N, 77.5946° E", Toast.LENGTH_SHORT).show()
-                }
+                },
+                onAvatarClick = { activeTab = AppTab.SETTINGS }
             )
 
             when (activeTab) {
@@ -362,17 +370,13 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
 @Composable
 fun HeaderBar(
     userName: String,
+    profilePhotoUri: String? = null,
     userLocation: String,
     userLat: Double,
     userLng: Double,
-    onLocationClick: () -> Unit
+    onLocationClick: () -> Unit,
+    onAvatarClick: (() -> Unit)? = null
 ) {
-    val initials = userName.split(" ")
-        .mapNotNull { it.firstOrNull()?.uppercaseChar() }
-        .take(2)
-        .joinToString("")
-        .ifEmpty { "VE" }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -380,21 +384,15 @@ fun HeaderBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                shape = CircleShape,
-                color = PolishPrimaryContainer,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = initials,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = PolishPrimary
-                    )
-                }
-            }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = if (onAvatarClick != null) Modifier.clickable { onAvatarClick() } else Modifier
+        ) {
+            ProfileAvatarView(
+                avatarUri = profilePhotoUri,
+                userName = userName,
+                size = 42.dp
+            )
 
             Spacer(modifier = Modifier.width(10.dp))
 
@@ -851,19 +849,16 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
     var showAddBankDialog by remember { mutableStateOf(false) }
     var showAddDocDialog by remember { mutableStateOf(false) }
 
-    // Zero-permission Photo Picker
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            viewModel.setProfilePhoto(uri.toString())
-            Toast.makeText(context, "Profile Photo Updated!", Toast.LENGTH_SHORT).show()
-        }
-    }
+    // Profile Photo Change Modal State
+    var showChangePhotoSheet by remember { mutableStateOf(false) }
+
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .padding(16.dp)
     ) {
         item {
@@ -897,63 +892,13 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                            .clickable {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val photoBitmap = remember(profilePhotoUri) {
-                            if (!profilePhotoUri.isNullOrBlank()) {
-                                try {
-                                    val stream = context.contentResolver.openInputStream(Uri.parse(profilePhotoUri))
-                                    stream?.use { BitmapFactory.decodeStream(it) }
-                                } catch (e: Exception) {
-                                    null
-                                }
-                            } else null
-                        }
-
-                        if (photoBitmap != null) {
-                            Image(
-                                bitmap = photoBitmap.asImageBitmap(),
-                                contentDescription = "Profile Photo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Text(
-                                text = currentName.split(" ").mapNotNull { it.firstOrNull()?.uppercaseChar() }.take(2).joinToString("").ifEmpty { "U" },
-                                fontWeight = FontWeight.Bold,
-                                color = PolishPrimary,
-                                fontSize = 26.sp
-                            )
-                        }
-
-                        // Camera badge
-                        Surface(
-                            shape = CircleShape,
-                            color = PolishPrimary,
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .size(24.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.CameraAlt,
-                                    contentDescription = "Pick Photo",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                        }
-                    }
+                    ProfileAvatarView(
+                        avatarUri = profilePhotoUri,
+                        userName = currentName,
+                        size = 72.dp,
+                        showCameraBadge = true,
+                        onClick = { showChangePhotoSheet = true }
+                    )
 
                     Spacer(modifier = Modifier.width(16.dp))
 
@@ -1111,6 +1056,8 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
 
                     Button(
                         onClick = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
                             viewModel.updateFullProfile(
                                 name = nameInput,
                                 dob = dobInput,
@@ -1225,6 +1172,8 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
 
                     Button(
                         onClick = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
                             viewModel.updateFullProfile(
                                 name = nameInput,
                                 dob = dobInput,
@@ -1661,7 +1610,11 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
         var accType by remember { mutableStateOf("Savings Account") }
 
         androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showAddBankDialog = false },
+            onDismissRequest = {
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                showAddBankDialog = false
+            },
             title = { Text("Add Bank Account", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
@@ -1701,6 +1654,8 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
             confirmButton = {
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         if (bankName.isNotBlank() && accNumber.isNotBlank()) {
                             viewModel.addBankAccount(bankName, accNumber, ifsc, accType)
                             showAddBankDialog = false
@@ -1713,7 +1668,13 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAddBankDialog = false }) {
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        showAddBankDialog = false
+                    }
+                ) {
                     Text("Cancel")
                 }
             }
@@ -1727,7 +1688,11 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
         var docNotes by remember { mutableStateOf("") }
 
         androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showAddDocDialog = false },
+            onDismissRequest = {
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                showAddDocDialog = false
+            },
             title = { Text("Add Document to Vault", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
@@ -1758,6 +1723,8 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
             confirmButton = {
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         if (docTitle.isNotBlank() && docNumber.isNotBlank()) {
                             viewModel.addStoredDocument(docTitle, docNumber, docNotes)
                             showAddDocDialog = false
@@ -1770,9 +1737,27 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAddDocDialog = false }) {
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        showAddDocDialog = false
+                    }
+                ) {
                     Text("Cancel")
                 }
+            }
+        )
+    }
+
+    // Change Profile Photo Bottom Sheet
+    if (showChangePhotoSheet) {
+        ChangeProfilePhotoBottomSheet(
+            currentUri = profilePhotoUri,
+            userName = currentName,
+            onDismiss = { showChangePhotoSheet = false },
+            onPhotoSelected = { newUri ->
+                viewModel.setProfilePhoto(newUri)
             }
         )
     }

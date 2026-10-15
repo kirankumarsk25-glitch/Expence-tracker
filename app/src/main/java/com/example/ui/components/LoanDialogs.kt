@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,9 +70,15 @@ fun AddLoanBottomSheet(
     var totalPrincipalText by remember { mutableStateOf("") }
     var monthlyInstallmentText by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            onDismiss()
+        },
         sheetState = sheetState,
         containerColor = PolishBackground
     ) {
@@ -77,6 +86,7 @@ fun AddLoanBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
@@ -189,7 +199,13 @@ fun AddLoanBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onDismiss()
+                    }
+                ) {
                     Text("Cancel", color = PolishOnBackground)
                 }
 
@@ -197,6 +213,8 @@ fun AddLoanBottomSheet(
 
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         val principal = totalPrincipalText.toDoubleOrNull() ?: 0.0
                         val monthly = monthlyInstallmentText.toDoubleOrNull() ?: 0.0
                         if (title.isNotBlank() && principal > 0) {
@@ -225,9 +243,15 @@ fun RecordLoanPaymentBottomSheet(
     var amountText by remember { mutableStateOf(loan.monthlyInstallmentUsd.toString()) }
     var payerName by remember { mutableStateOf(loan.borrowerOrLenderName) }
     var note by remember { mutableStateOf("Monthly Repayment Received") }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            onDismiss()
+        },
         sheetState = sheetState,
         containerColor = PolishBackground
     ) {
@@ -235,6 +259,7 @@ fun RecordLoanPaymentBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
@@ -289,7 +314,13 @@ fun RecordLoanPaymentBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onDismiss()
+                    }
+                ) {
                     Text("Cancel", color = PolishOnBackground)
                 }
 
@@ -297,6 +328,8 @@ fun RecordLoanPaymentBottomSheet(
 
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         val amt = amountText.toDoubleOrNull() ?: 0.0
                         if (amt > 0) {
                             onSubmit(amt, note, payerName)

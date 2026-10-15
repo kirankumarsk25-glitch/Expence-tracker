@@ -18,8 +18,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Cake
@@ -79,6 +86,8 @@ enum class AuthTab {
 @Composable
 fun LoginScreen(viewModel: FinanceViewModel) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     var activeTab by remember { mutableStateOf(AuthTab.LOGIN) }
 
     // Login Form State
@@ -98,13 +107,21 @@ fun LoginScreen(viewModel: FinanceViewModel) {
     var registerError by remember { mutableStateOf<String?>(null) }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
+            },
         color = PolishBackground
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(20.dp)
+                .imePadding()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
@@ -167,6 +184,8 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
                             activeTab = AuthTab.LOGIN
                             loginError = null
                         }
@@ -190,6 +209,8 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
                             activeTab = AuthTab.REGISTER
                             registerError = null
                         }
@@ -268,6 +289,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             label = { Text("Email ID or Phone Number") },
                             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = PolishPrimary) },
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -282,7 +304,14 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             label = { Text("Password") },
                             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = PolishPrimary) },
                             visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                            }),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -291,6 +320,8 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
                         Button(
                             onClick = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
                                 if (loginId.isBlank() || loginPassword.isBlank()) {
                                     loginError = "Please enter both Email/Phone and Password!"
                                 } else {
@@ -320,6 +351,8 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
                         TextButton(
                             onClick = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
                                 activeTab = AuthTab.REGISTER
                                 registerError = null
                             }
@@ -513,7 +546,14 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             label = { Text("Confirm Password") },
                             leadingIcon = { Icon(Icons.Default.Security, contentDescription = null, tint = PolishPrimary) },
                             visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                            }),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -522,6 +562,8 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
                         Button(
                             onClick = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
                                 if (regName.isBlank() || regEmail.isBlank() || regPhone.isBlank() || regPassword.isBlank() || regDob.isBlank()) {
                                     registerError = "Please fill in all mandatory fields!"
                                 } else if (regPassword != regConfirmPassword) {
@@ -564,6 +606,8 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
                         TextButton(
                             onClick = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
                                 activeTab = AuthTab.LOGIN
                                 loginError = null
                             }

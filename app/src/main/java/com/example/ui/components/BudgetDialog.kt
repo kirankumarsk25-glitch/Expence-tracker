@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,9 +59,15 @@ fun SetBudgetBottomSheet(
     var selectedCategory by remember { mutableStateOf(initialCategory) }
     var limitText by remember { mutableStateOf(initialLimit.toString()) }
     var isAlertEnabled by remember { mutableStateOf(true) }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            onDismiss()
+        },
         sheetState = sheetState,
         containerColor = PolishBackground
     ) {
@@ -66,6 +75,7 @@ fun SetBudgetBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(24.dp)
+                .imePadding()
         ) {
             Text(
                 text = "Set Category Budget Limit",
@@ -150,7 +160,13 @@ fun SetBudgetBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onDismiss()
+                    }
+                ) {
                     Text("Cancel", color = PolishOnBackground, fontWeight = FontWeight.Bold)
                 }
 
@@ -158,6 +174,8 @@ fun SetBudgetBottomSheet(
 
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                         val parsedLimit = limitText.toDoubleOrNull() ?: 0.0
                         if (parsedLimit > 0) {
                             onSubmit(selectedCategory.id, parsedLimit, isAlertEnabled)
