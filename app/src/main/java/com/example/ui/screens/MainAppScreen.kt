@@ -1,6 +1,13 @@
 package com.example.ui.screens
 
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,38 +22,63 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.ShowChart
-import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.TwoWheeler
 import androidx.compose.material.icons.filled.Wallet
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,20 +89,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
+import com.example.data.local.BudgetEntity
 import com.example.data.local.TransactionEntity
+import com.example.data.model.BankDetail
 import com.example.data.model.ExpenseCategory
+import com.example.data.model.FinancialSummary
+import com.example.data.model.StoredDocument
 import com.example.data.model.SupportedCurrency
 import com.example.data.model.TransactionType
 import com.example.ui.components.AddTransactionBottomSheet
-import com.example.ui.components.CashFlowBarChart
 import com.example.ui.components.HeroNetBalanceCard
 import com.example.ui.components.SetBudgetBottomSheet
-import com.example.ui.components.SpendingCategoryDonutChart
 import com.example.ui.theme.PolishBackground
 import com.example.ui.theme.PolishCreditGreen
 import com.example.ui.theme.PolishDebitRed
@@ -86,31 +125,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.ui.unit.sp
-import android.widget.Toast
-
+// 5 Core Tabs - No Stats tab as requested
 enum class AppTab(val title: String, val icon: ImageVector) {
     HOME("Home", Icons.Default.Home),
     LOANS("Loans", Icons.Default.AccountBalance),
     INVESTMENTS("Invest", Icons.Default.TrendingUp),
     BUDGETS("Budgets", Icons.Default.Wallet),
-    STATS("Stats", Icons.Default.ShowChart),
-    SETTINGS("Settings", Icons.Default.Settings)
+    SETTINGS("Settings", Icons.Default.Person)
 }
 
 @Composable
@@ -132,7 +153,6 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
 
     var showAddTxSheet by remember { mutableStateOf(false) }
     var showAddBudgetSheet by remember { mutableStateOf(false) }
-    var currencyPickerOpen by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -151,12 +171,12 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
                 Surface(
                     shape = CircleShape,
                     color = PolishPrimaryContainer,
-                    modifier = Modifier.size(96.dp)
+                    modifier = Modifier.size(90.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Lock,
-                            contentDescription = null,
+                            contentDescription = "Vault Locked",
                             tint = PolishPrimary,
                             modifier = Modifier.size(48.dp)
                         )
@@ -175,27 +195,33 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Authentication required to access financial records",
+                    text = "Authenticate with Biometrics to access financial records",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.Black,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                FloatingActionButton(
+                Button(
                     onClick = {
-                        (context as? FragmentActivity)?.let { act ->
+                        val activity = context as? FragmentActivity
+                        if (activity != null) {
                             viewModel.biometricHelper.promptBiometricAuth(
-                                activity = act,
+                                activity = activity,
                                 onSuccess = { viewModel.unlockVaultWithBiometrics() },
-                                onError = { /* handle */ }
+                                onError = { err ->
+                                    Toast.makeText(context, "Authentication: $err", Toast.LENGTH_SHORT).show()
+                                }
                             )
-                        } ?: viewModel.unlockVaultWithBiometrics()
+                        } else {
+                            viewModel.unlockVaultWithBiometrics()
+                        }
                     },
-                    containerColor = PolishPrimary,
-                    contentColor = PolishOnPrimary,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.height(56.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.height(50.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 24.dp),
@@ -279,11 +305,9 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
                     viewModel = viewModel,
                     summary = summary,
                     transactions = transactions,
-                    budgets = budgets,
                     syncState = syncState,
-                    onCurrencyClick = { currencyPickerOpen = true },
                     onSyncClick = { viewModel.triggerBackgroundSyncSimulation() },
-                    onSeeAllTransactions = { activeTab = AppTab.STATS }
+                    onSeeAllTransactions = { activeTab = AppTab.BUDGETS }
                 )
 
                 AppTab.LOANS -> LoansTabContent(
@@ -302,12 +326,6 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
                     onAddBudget = { showAddBudgetSheet = true }
                 )
 
-                AppTab.STATS -> StatsTabContent(
-                    viewModel = viewModel,
-                    summary = summary,
-                    transactions = transactions
-                )
-
                 AppTab.SETTINGS -> SettingsTabContent(viewModel = viewModel)
             }
         }
@@ -315,10 +333,17 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
 
     if (showAddTxSheet) {
         AddTransactionBottomSheet(
+            lockedCurrency = summary.activeCurrency,
             onDismiss = { showAddTxSheet = false },
             onSubmit = { title, amount, type, category, currency, note, paymentMethod ->
                 viewModel.addTransaction(
-                    title, amount, type, category, currency, note, paymentMethod
+                    title = title,
+                    amount = amount,
+                    type = type,
+                    category = category,
+                    currency = currency,
+                    note = note,
+                    paymentMethod = paymentMethod
                 )
             }
         )
@@ -329,17 +354,6 @@ fun MainAppContainer(viewModel: FinanceViewModel) {
             onDismiss = { showAddBudgetSheet = false },
             onSubmit = { catId, limit, isAlert ->
                 viewModel.setBudget(catId, limit, isAlert)
-            }
-        )
-    }
-
-    if (currencyPickerOpen) {
-        CurrencyPickerBottomSheet(
-            activeCurrency = summary.activeCurrency,
-            onDismiss = { currencyPickerOpen = false },
-            onSelect = { curr ->
-                viewModel.setSelectedCurrency(curr)
-                currencyPickerOpen = false
             }
         )
     }
@@ -440,106 +454,33 @@ fun HeaderBar(
 @Composable
 fun HomeTabContent(
     viewModel: FinanceViewModel,
-    summary: com.example.data.model.FinancialSummary,
+    summary: FinancialSummary,
     transactions: List<TransactionEntity>,
-    budgets: List<com.example.data.local.BudgetEntity>,
     syncState: com.example.data.model.SyncState,
-    onCurrencyClick: () -> Unit,
     onSyncClick: () -> Unit,
     onSeeAllTransactions: () -> Unit
 ) {
+    val context = LocalContext.current
+    var showAllTransactions by remember { mutableStateOf(false) }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
+        // Vault Balance, Credit & Debit Summary Box (Budget tracking card removed as requested)
         item {
             HeroNetBalanceCard(
                 summary = summary,
                 syncState = syncState,
-                onCurrencyClick = onCurrencyClick,
+                onCurrencyClick = {
+                    Toast.makeText(
+                        context,
+                        "Locked Currency: ${summary.activeCurrency.name} (${summary.activeCurrency.symbol})",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
                 onSyncClick = onSyncClick,
                 onLockClick = { viewModel.lockVault() }
             )
-        }
-
-        item {
-            val totalDebitUsd = transactions
-                .filter { it.type == TransactionType.DEBIT.name }
-                .sumOf { it.amountInBaseUsd }
-            val totalBudgetUsd = budgets.sumOf { it.monthlyLimit }.coerceAtLeast(1.0)
-            val overallRatio = (totalDebitUsd / totalBudgetUsd).toFloat().coerceIn(0f, 1f)
-            val percentUsed = (overallRatio * 100).toInt()
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = PolishSurface),
-                border = BorderStroke(1.dp, PolishOutline)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.PieChart,
-                                contentDescription = null,
-                                tint = PolishPrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Budget Tracking",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = PolishOnBackground
-                            )
-                        }
-
-                        Text(
-                            text = "$percentUsed% Used",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (percentUsed > 80) PolishDebitRed else PolishPrimary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    LinearProgressIndicator(
-                        progress = { overallRatio },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(CircleShape),
-                        color = if (percentUsed > 80) PolishDebitRed else PolishPrimary,
-                        trackColor = PolishSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Used: ${summary.activeCurrency.symbol}%.2f".format(totalDebitUsd * summary.activeCurrency.rateToUsd),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF49454F),
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "Limit: ${summary.activeCurrency.symbol}%.2f".format(totalBudgetUsd * summary.activeCurrency.rateToUsd),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF49454F),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
         }
 
         item {
@@ -551,36 +492,81 @@ fun HomeTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Transactions",
+                    text = if (showAllTransactions) "All Transactions (${transactions.size})" else "Recent Transactions",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = PolishOnBackground
                 )
 
-                TextButton(onClick = onSeeAllTransactions) {
-                    Text("See all", color = PolishPrimary, fontWeight = FontWeight.Bold)
+                TextButton(onClick = { showAllTransactions = !showAllTransactions }) {
+                    Text(
+                        text = if (showAllTransactions) "Show Less" else "See All",
+                        color = PolishPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
 
-        items(transactions.take(8)) { tx ->
-            TransactionRowItem(
-                tx = tx,
-                currency = summary.activeCurrency,
-                onDelete = { viewModel.deleteTransaction(tx.id) }
-            )
+        val displayedTransactions = if (showAllTransactions) transactions else transactions.take(8)
+
+        if (displayedTransactions.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = PolishSurface),
+                    border = BorderStroke(1.dp, PolishOutline)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No Transactions Recorded Yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PolishOnBackground
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Tap the '+' button below to record your first credit or debit.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        } else {
+            items(displayedTransactions) { tx ->
+                TransactionRowItem(
+                    tx = tx,
+                    currency = summary.activeCurrency,
+                    onDelete = { viewModel.deleteTransaction(tx.id) }
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetsTabContent(
     viewModel: FinanceViewModel,
-    summary: com.example.data.model.FinancialSummary,
-    budgets: List<com.example.data.local.BudgetEntity>,
+    summary: FinancialSummary,
+    budgets: List<BudgetEntity>,
     transactions: List<TransactionEntity>,
     onAddBudget: () -> Unit
 ) {
+    var selectedCategoryForDetails by remember { mutableStateOf<ExpenseCategory?>(null) }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -602,10 +588,10 @@ fun BudgetsTabContent(
                         color = PolishOnBackground
                     )
                     Text(
-                        text = "Real-time notifications trigger when thresholds are reached",
+                        text = "Click any category budget to see its individual transactions",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF49454F),
-                        fontWeight = FontWeight.Medium
+                        color = Color.Black,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -616,7 +602,7 @@ fun BudgetsTabContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Add Budget",
+                        contentDescription = "Set Budget",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
                     )
@@ -624,7 +610,8 @@ fun BudgetsTabContent(
             }
         }
 
-        items(ExpenseCategory.entries) { category ->
+        // Show debit expense categories for budgeting
+        items(ExpenseCategory.debitCategories) { category ->
             val budget = budgets.find { it.categoryId == category.id }
             val limitUsd = budget?.monthlyLimit ?: 0.0
             val spentUsd = transactions
@@ -633,11 +620,13 @@ fun BudgetsTabContent(
 
             val ratio = if (limitUsd > 0) (spentUsd / limitUsd).toFloat().coerceIn(0f, 1f) else 0f
             val percent = (ratio * 100).toInt()
+            val txCount = transactions.count { it.categoryId == category.id }
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 6.dp),
+                    .padding(vertical = 6.dp)
+                    .clickable { selectedCategoryForDetails = category },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = PolishSurface),
                 border = BorderStroke(1.dp, PolishOutline)
@@ -651,7 +640,7 @@ fun BudgetsTabContent(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(38.dp)
                                     .clip(CircleShape)
                                     .background(Color(category.colorHex).copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
@@ -672,10 +661,10 @@ fun BudgetsTabContent(
                                     color = PolishOnBackground
                                 )
                                 Text(
-                                    text = if (limitUsd > 0) "$percent% of monthly budget" else "No budget set",
+                                    text = "$txCount transactions • Tap to view",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF49454F),
-                                    fontWeight = FontWeight.Medium
+                                    color = PolishPrimary,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -691,7 +680,7 @@ fun BudgetsTabContent(
                                 Text(
                                     text = "/ ${summary.activeCurrency.symbol}%.2f".format(limitUsd * summary.activeCurrency.rateToUsd),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF49454F),
+                                    color = Color.Black,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -709,6 +698,105 @@ fun BudgetsTabContent(
                             color = if (percent >= 80) PolishDebitRed else Color(category.colorHex),
                             trackColor = PolishSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "$percent% of monthly budget",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (percent >= 100) {
+                                Text(
+                                    text = "Budget Exceeded!",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PolishDebitRed
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+
+    // Modal Sheet showing specific transactions for selected budget category
+    if (selectedCategoryForDetails != null) {
+        val cat = selectedCategoryForDetails!!
+        val catTransactions = transactions.filter { it.categoryId == cat.id }
+        val catSpent = catTransactions.sumOf { it.amountInBaseUsd * summary.activeCurrency.rateToUsd }
+
+        ModalBottomSheet(
+            onDismissRequest = { selectedCategoryForDetails = null },
+            containerColor = PolishBackground
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "${cat.title} Transactions",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PolishOnBackground
+                        )
+                        Text(
+                            text = "Total Spent: ${summary.activeCurrency.symbol}%.2f (${catTransactions.size} records)".format(catSpent),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PolishPrimary
+                        )
+                    }
+
+                    TextButton(onClick = { selectedCategoryForDetails = null }) {
+                        Text("Done", fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                if (catTransactions.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No transactions logged in ${cat.title} yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Black,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(350.dp)
+                    ) {
+                        items(catTransactions) { tx ->
+                            TransactionRowItem(
+                                tx = tx,
+                                currency = summary.activeCurrency,
+                                onDelete = { viewModel.deleteTransaction(tx.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -717,77 +805,61 @@ fun BudgetsTabContent(
 }
 
 @Composable
-fun StatsTabContent(
-    viewModel: FinanceViewModel,
-    summary: com.example.data.model.FinancialSummary,
-    transactions: List<TransactionEntity>
-) {
-    val searchQuery by viewModel.searchQuery.collectAsState()
-
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        item {
-            SpendingCategoryDonutChart(
-                transactions = transactions,
-                currency = summary.activeCurrency
-            )
-        }
-
-        item {
-            CashFlowBarChart(
-                transactions = transactions,
-                currency = summary.activeCurrency
-            )
-        }
-
-        item {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.setSearchQuery(it) },
-                    placeholder = { Text("Search transactions, notes...", color = Color(0xFF79747E)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PolishPrimary) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedContainerColor = PolishSurface,
-                        unfocusedContainerColor = PolishSurface,
-                        focusedBorderColor = PolishPrimary,
-                        unfocusedBorderColor = PolishOutline
-                    )
-                )
-            }
-        }
-
-        items(transactions) { tx ->
-            TransactionRowItem(
-                tx = tx,
-                currency = summary.activeCurrency,
-                onDelete = { viewModel.deleteTransaction(tx.id) }
-            )
-        }
-    }
-}
-
-@Composable
 fun SettingsTabContent(viewModel: FinanceViewModel) {
     val context = LocalContext.current
 
-    val isBioEnabled by viewModel.isBiometricEnabled.collectAsState()
-    val syncCode by viewModel.deviceSyncCode.collectAsState()
-
     val currentName by viewModel.userName.collectAsState()
+    val currentDob by viewModel.userDob.collectAsState()
+    val currentBloodGroup by viewModel.userBloodGroup.collectAsState()
     val currentEmail by viewModel.userEmail.collectAsState()
     val currentPhone by viewModel.userPhone.collectAsState()
-    val currentDob by viewModel.userDob.collectAsState()
-    val currentLocation by viewModel.userLocation.collectAsState()
+    val currentSecPhone by viewModel.userSecondaryPhone.collectAsState()
+    val currentOfficeAddr by viewModel.userOfficeAddress.collectAsState()
+    val currentPermAddr by viewModel.userPermanentAddress.collectAsState()
+    val currentTempAddr by viewModel.userTemporaryAddress.collectAsState()
+    val currentPan by viewModel.userPanNumber.collectAsState()
+    val currentAadhar by viewModel.userAadharNumber.collectAsState()
+    val currentDl by viewModel.userDlNumber.collectAsState()
+    val currentCarNo by viewModel.userCarNumber.collectAsState()
+    val currentBikeNo by viewModel.userBikeNumber.collectAsState()
+    val profilePhotoUri by viewModel.userProfilePhotoUri.collectAsState()
 
+    val bankAccounts by viewModel.bankAccounts.collectAsState()
+    val storedDocuments by viewModel.storedDocuments.collectAsState()
+
+    val isBioEnabled by viewModel.isBiometricEnabled.collectAsState()
+    val lockedCurrency by viewModel.selectedCurrency.collectAsState()
+    val syncCode by viewModel.deviceSyncCode.collectAsState()
+
+    // Form inputs state
     var nameInput by remember(currentName) { mutableStateOf(currentName) }
+    var dobInput by remember(currentDob) { mutableStateOf(currentDob) }
+    var bloodGroupInput by remember(currentBloodGroup) { mutableStateOf(currentBloodGroup) }
     var emailInput by remember(currentEmail) { mutableStateOf(currentEmail) }
     var phoneInput by remember(currentPhone) { mutableStateOf(currentPhone) }
-    var dobInput by remember(currentDob) { mutableStateOf(currentDob) }
-    var locationInput by remember(currentLocation) { mutableStateOf(currentLocation) }
+    var secPhoneInput by remember(currentSecPhone) { mutableStateOf(currentSecPhone) }
+    var officeAddrInput by remember(currentOfficeAddr) { mutableStateOf(currentOfficeAddr) }
+    var permAddrInput by remember(currentPermAddr) { mutableStateOf(currentPermAddr) }
+    var tempAddrInput by remember(currentTempAddr) { mutableStateOf(currentTempAddr) }
+    var panInput by remember(currentPan) { mutableStateOf(currentPan) }
+    var aadharInput by remember(currentAadhar) { mutableStateOf(currentAadhar) }
+    var dlInput by remember(currentDl) { mutableStateOf(currentDl) }
+    var carNoInput by remember(currentCarNo) { mutableStateOf(currentCarNo) }
+    var bikeNoInput by remember(currentBikeNo) { mutableStateOf(currentBikeNo) }
+
+    // Dialogs state for Bank Account and Documents
+    var showAddBankDialog by remember { mutableStateOf(false) }
+    var showAddDocDialog by remember { mutableStateOf(false) }
+
+    // Zero-permission Photo Picker
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.setProfilePhoto(uri.toString())
+            Toast.makeText(context, "Profile Photo Updated!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -796,14 +868,14 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
     ) {
         item {
             Text(
-                text = "Account Settings & Profile",
+                text = "Account Profile & Settings",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = PolishOnBackground
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Manage your credentials, profile options & security settings",
+                text = "Personal details, identification, multiple bank accounts & export",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Black,
                 fontWeight = FontWeight.SemiBold
@@ -811,13 +883,13 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Google Account Status Banner
+        // Profile Photo & Header Card
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = PolishPrimaryContainer),
                 border = BorderStroke(1.dp, PolishOutline)
             ) {
@@ -825,18 +897,61 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.White,
-                        modifier = Modifier.size(52.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .clickable {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        val photoBitmap = remember(profilePhotoUri) {
+                            if (!profilePhotoUri.isNullOrBlank()) {
+                                try {
+                                    val stream = context.contentResolver.openInputStream(Uri.parse(profilePhotoUri))
+                                    stream?.use { BitmapFactory.decodeStream(it) }
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            } else null
+                        }
+
+                        if (photoBitmap != null) {
+                            Image(
+                                bitmap = photoBitmap.asImageBitmap(),
+                                contentDescription = "Profile Photo",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
                             Text(
                                 text = currentName.split(" ").mapNotNull { it.firstOrNull()?.uppercaseChar() }.take(2).joinToString("").ifEmpty { "U" },
                                 fontWeight = FontWeight.Bold,
                                 color = PolishPrimary,
-                                fontSize = 20.sp
+                                fontSize = 26.sp
                             )
+                        }
+
+                        // Camera badge
+                        Surface(
+                            shape = CircleShape,
+                            color = PolishPrimary,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(24.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = "Pick Photo",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
                         }
                     }
 
@@ -855,22 +970,17 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                             color = Color.Black,
                             fontWeight = FontWeight.SemiBold
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 4.dp)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = PolishPrimary.copy(alpha = 0.15f)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = PolishCreditGreen,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Google Account Connected",
+                                text = "Tap photo to change avatar",
                                 style = MaterialTheme.typography.labelSmall,
+                                color = PolishPrimary,
                                 fontWeight = FontWeight.Bold,
-                                color = PolishCreditGreen
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
                         }
                     }
@@ -878,7 +988,7 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
             }
         }
 
-        // Personal Profile Options Form
+        // Section 1: Personal & Residence Details
         item {
             Card(
                 modifier = Modifier
@@ -890,7 +1000,7 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Profile Information",
+                        text = "Personal & Residence Information",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = PolishOnBackground
@@ -909,6 +1019,30 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = dobInput,
+                            onValueChange = { dobInput = it },
+                            label = { Text("DOB (Date of Birth)") },
+                            leadingIcon = { Icon(Icons.Default.Cake, contentDescription = null, tint = PolishPrimary) },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        OutlinedTextField(
+                            value = bloodGroupInput,
+                            onValueChange = { bloodGroupInput = it },
+                            label = { Text("Blood Group") },
+                            placeholder = { Text("O+, A+, etc.") },
+                            singleLine = true,
+                            modifier = Modifier.weight(0.7f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     OutlinedTextField(
                         value = emailInput,
                         onValueChange = { emailInput = it },
@@ -923,7 +1057,7 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                     OutlinedTextField(
                         value = phoneInput,
                         onValueChange = { phoneInput = it },
-                        label = { Text("Phone Number") },
+                        label = { Text("Primary Phone Number") },
                         leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = PolishPrimary) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         singleLine = true,
@@ -933,10 +1067,12 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                     Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
-                        value = dobInput,
-                        onValueChange = { dobInput = it },
-                        label = { Text("Date of Birth (DOB)") },
-                        leadingIcon = { Icon(Icons.Default.Cake, contentDescription = null, tint = PolishPrimary) },
+                        value = secPhoneInput,
+                        onValueChange = { secPhoneInput = it },
+                        label = { Text("Secondary / Alternate Phone Number") },
+                        placeholder = { Text("+91 ...") },
+                        leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = PolishPrimary) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -944,43 +1080,182 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                     Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedTextField(
-                        value = locationInput,
-                        onValueChange = { locationInput = it },
-                        label = { Text("Location (Auto-saved)") },
-                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = PolishPrimary) },
-                        singleLine = true,
+                        value = permAddrInput,
+                        onValueChange = { permAddrInput = it },
+                        label = { Text("Permanent Residence Address") },
+                        leadingIcon = { Icon(Icons.Default.Home, contentDescription = null, tint = PolishPrimary) },
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = tempAddrInput,
+                        onValueChange = { tempAddrInput = it },
+                        label = { Text("Temporary Residence Address") },
+                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = PolishPrimary) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = officeAddrInput,
+                        onValueChange = { officeAddrInput = it },
+                        label = { Text("Office Address") },
+                        leadingIcon = { Icon(Icons.Default.Work, contentDescription = null, tint = PolishPrimary) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     Button(
                         onClick = {
-                            viewModel.updateUserProfile(nameInput, emailInput, phoneInput, dobInput, locationInput)
-                            Toast.makeText(context, "Profile & location updated in database!", Toast.LENGTH_SHORT).show()
+                            viewModel.updateFullProfile(
+                                name = nameInput,
+                                dob = dobInput,
+                                bloodGroup = bloodGroupInput,
+                                email = emailInput,
+                                phone = phoneInput,
+                                secPhone = secPhoneInput,
+                                officeAddr = officeAddrInput,
+                                permAddr = permAddrInput,
+                                tempAddr = tempAddrInput,
+                                pan = panInput,
+                                aadhar = aadharInput,
+                                dl = dlInput,
+                                carNo = carNoInput,
+                                bikeNo = bikeNoInput
+                            )
+                            Toast.makeText(context, "Personal Details Saved Successfully!", Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Save,
-                            contentDescription = "Save Profile",
-                            modifier = Modifier.size(18.dp),
-                            tint = PolishOnPrimary
-                        )
+                        Icon(imageVector = Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Save Profile Changes",
-                            fontWeight = FontWeight.Bold,
-                            color = PolishOnPrimary
-                        )
+                        Text("Save Personal Details", fontWeight = FontWeight.Bold, color = PolishOnPrimary)
                     }
                 }
             }
         }
 
-        // Biometrics Card
+        // Section 2: Identification & Vehicle Numbers
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = PolishSurface),
+                border = BorderStroke(1.dp, PolishOutline)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Official Identification & Vehicles",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PolishOnBackground
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    OutlinedTextField(
+                        value = panInput,
+                        onValueChange = { panInput = it.uppercase() },
+                        label = { Text("PAN Number") },
+                        placeholder = { Text("ABCDE1234F") },
+                        leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = PolishPrimary) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = aadharInput,
+                        onValueChange = { aadharInput = it },
+                        label = { Text("Aadhaar Number") },
+                        placeholder = { Text("12-digit Aadhaar") },
+                        leadingIcon = { Icon(Icons.Default.CreditCard, contentDescription = null, tint = PolishPrimary) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = dlInput,
+                        onValueChange = { dlInput = it },
+                        label = { Text("Driving License (DL) Number") },
+                        leadingIcon = { Icon(Icons.Default.DirectionsCar, contentDescription = null, tint = PolishPrimary) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = carNoInput,
+                            onValueChange = { carNoInput = it.uppercase() },
+                            label = { Text("Car Number") },
+                            placeholder = { Text("KA-01-AB-1234") },
+                            leadingIcon = { Icon(Icons.Default.DirectionsCar, contentDescription = null, tint = PolishPrimary) },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        OutlinedTextField(
+                            value = bikeNoInput,
+                            onValueChange = { bikeNoInput = it.uppercase() },
+                            label = { Text("Bike Number") },
+                            placeholder = { Text("KA-05-CD-5678") },
+                            leadingIcon = { Icon(Icons.Default.TwoWheeler, contentDescription = null, tint = PolishPrimary) },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.updateFullProfile(
+                                name = nameInput,
+                                dob = dobInput,
+                                bloodGroup = bloodGroupInput,
+                                email = emailInput,
+                                phone = phoneInput,
+                                secPhone = secPhoneInput,
+                                officeAddr = officeAddrInput,
+                                permAddr = permAddrInput,
+                                tempAddr = tempAddrInput,
+                                pan = panInput,
+                                aadhar = aadharInput,
+                                dl = dlInput,
+                                carNo = carNoInput,
+                                bikeNo = bikeNoInput
+                            )
+                            Toast.makeText(context, "ID & Vehicle Numbers Saved!", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(imageVector = Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Save Identification & Vehicles", fontWeight = FontWeight.Bold, color = PolishOnPrimary)
+                    }
+                }
+            }
+        }
+
+        // Section 3: Bank Details (Multiple Banks)
         item {
             Card(
                 modifier = Modifier
@@ -996,38 +1271,95 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Fingerprint,
-                                contentDescription = null,
-                                tint = PolishPrimary
+                        Column {
+                            Text(
+                                text = "Bank Accounts (${bankAccounts.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PolishOnBackground
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Biometric Lock",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "Require Fingerprint / Face ID to open app",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Black,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                            Text(
+                                text = "Multiple bank account details for transfers & ledger",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
 
-                        androidx.compose.material3.Switch(
-                            checked = isBioEnabled,
-                            onCheckedChange = { viewModel.toggleBiometricEnabled(it) }
+                        Button(
+                            onClick = { showAddBankDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Add Bank", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (bankAccounts.isEmpty()) {
+                        Text(
+                            text = "No bank accounts added yet.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Black
                         )
+                    } else {
+                        bankAccounts.forEach { bank ->
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = PolishSurfaceVariant,
+                                border = BorderStroke(0.5.dp, PolishOutline),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = bank.bankName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PolishOnBackground
+                                        )
+                                        Text(
+                                            text = "A/C: ${bank.accountNumber} • IFSC: ${bank.ifscCode}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.Black
+                                        )
+                                        Text(
+                                            text = bank.accountType,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = PolishPrimary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    IconButton(onClick = { viewModel.deleteBankAccount(bank.id) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete Bank",
+                                            tint = PolishDebitRed,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Multi-Device Cloud Sync Card
+        // Section 4: Document Vault
         item {
             Card(
                 modifier = Modifier
@@ -1038,49 +1370,93 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                 border = BorderStroke(1.dp, PolishOutline)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = null,
-                            tint = PolishPrimary
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Column {
                             Text(
-                                text = "Cross-Device Cloud Sync",
+                                text = "Document Storage Vault (${storedDocuments.size})",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = PolishOnBackground
                             )
                             Text(
-                                text = "Pair with tablet or second mobile device",
+                                text = "Store document numbers, references & records",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.Black,
                                 fontWeight = FontWeight.Medium
                             )
                         }
+
+                        Button(
+                            onClick = { showAddDocDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Add Doc", fontWeight = FontWeight.Bold)
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = PolishSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Device Pairing Code: $syncCode",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = PolishPrimary
-                            )
+                    if (storedDocuments.isEmpty()) {
+                        Text(
+                            text = "No documents stored in vault yet.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Black
+                        )
+                    } else {
+                        storedDocuments.forEach { doc ->
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = PolishSurfaceVariant,
+                                border = BorderStroke(0.5.dp, PolishOutline),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = doc.title,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PolishOnBackground
+                                        )
+                                        Text(
+                                            text = "ID: ${doc.docNumber}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black
+                                        )
+                                        if (doc.notes.isNotBlank()) {
+                                            Text(
+                                                text = doc.notes,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFF49454F)
+                                            )
+                                        }
+                                    }
 
-                            TextButton(onClick = { viewModel.generateNewSyncCode() }) {
-                                Text("Regenerate")
+                                    IconButton(onClick = { viewModel.deleteStoredDocument(doc.id) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete Document",
+                                            tint = PolishDebitRed,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -1088,7 +1464,153 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
             }
         }
 
-        // Sign Out Card
+        // Section 5: Locked Currency & Biometrics
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = PolishSurface),
+                border = BorderStroke(1.dp, PolishOutline)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Locked currency
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Registered Currency",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Locked to ${lockedCurrency.country}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = PolishPrimaryContainer
+                        ) {
+                            Text(
+                                text = "${lockedCurrency.code} (${lockedCurrency.symbol})",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PolishPrimary,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Biometric Lock
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Biometric Lock",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Require Fingerprint to open app",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Switch(
+                            checked = isBioEnabled,
+                            onCheckedChange = { viewModel.toggleBiometricEnabled(it) }
+                        )
+                    }
+                }
+            }
+        }
+
+        // Section 6: EXPORT EVERYTHING IN EXCEL SHEET OPTION (Prominent Bottom Button)
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = PolishPrimaryContainer),
+                border = BorderStroke(1.5.dp, PolishPrimary)
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.TableChart,
+                            contentDescription = "Excel Export",
+                            tint = PolishPrimary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Comprehensive Ledger Export",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = PolishPrimary
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "Exports all Profile Details, Banks, Documents, Transactions, Budgets, Loans & Investment portfolio page-wise into an Excel-compatible spreadsheet.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.exportEverythingToExcel(context)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Export to Excel",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Export Everything in Excel Sheet",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+
+        // Section 7: Sign Out
         item {
             Card(
                 modifier = Modifier
@@ -1102,7 +1624,7 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                     OutlinedButton(
                         onClick = {
                             viewModel.logout()
-                            Toast.makeText(context, "Signed out of Google account", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Signed out of account", Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = PolishDebitRed),
                         border = BorderStroke(1.dp, PolishDebitRed),
@@ -1125,6 +1647,134 @@ fun SettingsTabContent(viewModel: FinanceViewModel) {
                 }
             }
         }
+
+        item {
+            Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+
+    // Add Bank Account Dialog
+    if (showAddBankDialog) {
+        var bankName by remember { mutableStateOf("") }
+        var accNumber by remember { mutableStateOf("") }
+        var ifsc by remember { mutableStateOf("") }
+        var accType by remember { mutableStateOf("Savings Account") }
+
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showAddBankDialog = false },
+            title = { Text("Add Bank Account", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = bankName,
+                        onValueChange = { bankName = it },
+                        label = { Text("Bank Name") },
+                        placeholder = { Text("e.g. State Bank of India, HDFC") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = accNumber,
+                        onValueChange = { accNumber = it },
+                        label = { Text("Account Number") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = ifsc,
+                        onValueChange = { ifsc = it.uppercase() },
+                        label = { Text("IFSC Code") },
+                        placeholder = { Text("SBIN0001234") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = accType,
+                        onValueChange = { accType = it },
+                        label = { Text("Account Type") },
+                        placeholder = { Text("Savings, Salary, Current") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (bankName.isNotBlank() && accNumber.isNotBlank()) {
+                            viewModel.addBankAccount(bankName, accNumber, ifsc, accType)
+                            showAddBankDialog = false
+                            Toast.makeText(context, "Bank Account Added!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary)
+                ) {
+                    Text("Add Bank")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddBankDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Add Stored Document Dialog
+    if (showAddDocDialog) {
+        var docTitle by remember { mutableStateOf("") }
+        var docNumber by remember { mutableStateOf("") }
+        var docNotes by remember { mutableStateOf("") }
+
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showAddDocDialog = false },
+            title = { Text("Add Document to Vault", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = docTitle,
+                        onValueChange = { docTitle = it },
+                        label = { Text("Document Title") },
+                        placeholder = { Text("e.g. Passport, RC, Insurance, Lease") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = docNumber,
+                        onValueChange = { docNumber = it },
+                        label = { Text("Document / ID Number") },
+                        placeholder = { Text("e.g. Z1234567") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = docNotes,
+                        onValueChange = { docNotes = it },
+                        label = { Text("Notes / Reference (Optional)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (docTitle.isNotBlank() && docNumber.isNotBlank()) {
+                            viewModel.addStoredDocument(docTitle, docNumber, docNotes)
+                            showAddDocDialog = false
+                            Toast.makeText(context, "Document Added to Vault!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary)
+                ) {
+                    Text("Save Document")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDocDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -1137,7 +1787,6 @@ fun TransactionRowItem(
     val category = ExpenseCategory.fromId(tx.categoryId)
     val isCredit = tx.type == TransactionType.CREDIT.name
     val formattedDate = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault()).format(Date(tx.timestamp))
-
     val displayAmount = tx.amountInBaseUsd * currency.rateToUsd
 
     Card(
@@ -1189,7 +1838,7 @@ fun TransactionRowItem(
                     Text(
                         text = "${category.title} • $formattedDate",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF49454F),
+                        color = Color.Black,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -1206,7 +1855,7 @@ fun TransactionRowItem(
                     Text(
                         text = tx.paymentMethod,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF49454F),
+                        color = Color.Black,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -1215,51 +1864,11 @@ fun TransactionRowItem(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = Color(0xFF79747E),
+                        tint = PolishDebitRed,
                         modifier = Modifier.size(18.dp)
                     )
                 }
             }
         }
     }
-}
-
-@Composable
-fun CurrencyPickerBottomSheet(
-    activeCurrency: SupportedCurrency,
-    onDismiss: () -> Unit,
-    onSelect: (SupportedCurrency) -> Unit
-) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Currency") },
-        text = {
-            Column {
-                SupportedCurrency.ALL.forEach { curr ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(curr) }
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${curr.code} (${curr.symbol})",
-                            fontWeight = if (curr.code == activeCurrency.code) FontWeight.Bold else FontWeight.Normal,
-                            color = if (curr.code == activeCurrency.code) PolishPrimary else PolishOnBackground
-                        )
-                        Text(
-                            text = curr.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
-        }
-    )
 }

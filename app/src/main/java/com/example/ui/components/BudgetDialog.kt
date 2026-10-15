@@ -46,8 +46,8 @@ import com.example.ui.theme.PolishSurfaceVariant
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetBudgetBottomSheet(
-    initialCategory: ExpenseCategory = ExpenseCategory.DINING,
-    initialLimit: Double = 300.0,
+    initialCategory: ExpenseCategory = ExpenseCategory.SHOPPING,
+    initialLimit: Double = 5000.0,
     onDismiss: () -> Unit,
     onSubmit: (categoryId: String, limitAmount: Double, isAlertEnabled: Boolean) -> Unit
 ) {
@@ -86,7 +86,7 @@ fun SetBudgetBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(ExpenseCategory.entries) { category ->
+                items(ExpenseCategory.debitCategories) { category ->
                     val isSelected = selectedCategory == category
                     Surface(
                         shape = RoundedCornerShape(12.dp),
@@ -109,7 +109,7 @@ fun SetBudgetBottomSheet(
             OutlinedTextField(
                 value = limitText,
                 onValueChange = { limitText = it },
-                label = { Text("Monthly Budget Limit ($)") },
+                label = { Text("Monthly Budget Limit") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()

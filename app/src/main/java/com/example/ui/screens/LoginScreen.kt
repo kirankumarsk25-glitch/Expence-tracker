@@ -1,7 +1,6 @@
 package com.example.ui.screens
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,29 +23,26 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CurrencyRupee
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +59,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.SupportedCurrency
 import com.example.ui.theme.PolishBackground
 import com.example.ui.theme.PolishCreditGreen
 import com.example.ui.theme.PolishDebitRed
@@ -83,7 +80,6 @@ enum class AuthTab {
 fun LoginScreen(viewModel: FinanceViewModel) {
     val context = LocalContext.current
     var activeTab by remember { mutableStateOf(AuthTab.LOGIN) }
-    var showGoogleAuthDialog by remember { mutableStateOf(false) }
 
     // Login Form State
     var loginId by remember { mutableStateOf("") }
@@ -92,11 +88,13 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
     // Register Form State
     var regName by remember { mutableStateOf("") }
+    var regDob by remember { mutableStateOf("") }
     var regEmail by remember { mutableStateOf("") }
     var regPhone by remember { mutableStateOf("") }
-    var regDob by remember { mutableStateOf("1999-08-25") }
     var regPassword by remember { mutableStateOf("") }
     var regConfirmPassword by remember { mutableStateOf("") }
+    var regCurrency by remember { mutableStateOf(SupportedCurrency.INR) }
+    var currencyDropdownOpen by remember { mutableStateOf(false) }
     var registerError by remember { mutableStateOf<String?>(null) }
 
     Surface(
@@ -113,14 +111,14 @@ fun LoginScreen(viewModel: FinanceViewModel) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // App Logo Header
+            // App Brand Header
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Surface(
                     shape = CircleShape,
                     color = PolishPrimaryContainer,
-                    modifier = Modifier.size(80.dp)
+                    modifier = Modifier.size(76.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -132,7 +130,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
                     text = "Vault Expense",
@@ -144,7 +142,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Smart financial control, debt management & secure auto-location sync",
+                    text = "Smart Financial Vault, Multi-Bank & Personal Expense Ledger",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Black,
                     fontWeight = FontWeight.SemiBold,
@@ -155,7 +153,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tab Switcher (Login vs Register)
+            // Tab Switcher (Sign In vs Register)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,7 +199,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                         modifier = Modifier.padding(vertical = 12.dp)
                     ) {
                         Text(
-                            text = "Register Account",
+                            text = "Register",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (activeTab == AuthTab.REGISTER) PolishOnPrimary else PolishOnBackground
@@ -212,7 +210,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Main Auth Card
+            // Form Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -224,15 +222,16 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (activeTab == AuthTab.LOGIN) {
+                        // SIGN IN FORM
                         Text(
-                            text = "Account Login",
+                            text = "Sign In to Your Account",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = PolishOnBackground
                         )
 
                         Text(
-                            text = "Enter your Email or Mobile Number & Password to continue.",
+                            text = "Enter your Email ID or Phone Number and Password.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Black,
                             fontWeight = FontWeight.Medium,
@@ -266,13 +265,13 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                                 loginId = it
                                 loginError = null
                             },
-                            label = { Text("Email ID or Mobile Number") },
+                            label = { Text("Email ID or Phone Number") },
                             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = PolishPrimary) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         OutlinedTextField(
                             value = loginPassword,
@@ -288,18 +287,18 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(18.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         Button(
                             onClick = {
                                 if (loginId.isBlank() || loginPassword.isBlank()) {
-                                    loginError = "Please enter both Email/Mobile and Password!"
+                                    loginError = "Please enter both Email/Phone and Password!"
                                 } else {
                                     val success = viewModel.loginWithCredentials(loginId, loginPassword)
                                     if (success) {
                                         Toast.makeText(context, "Welcome back! Login Successful.", Toast.LENGTH_SHORT).show()
                                     } else {
-                                        loginError = "Invalid Email/Mobile or Password! Please check credentials or register."
+                                        loginError = "Invalid Email/Phone or Password. Please check credentials or register."
                                     }
                                 }
                             },
@@ -307,67 +306,33 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
+                                .height(52.dp)
                         ) {
                             Text(
-                                text = "Sign In with Credentials",
+                                text = "Sign In",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = PolishOnPrimary
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(modifier = Modifier.weight(1f).height(1.dp), color = PolishOutline) {}
-                            Text(
-                                text = " OR ",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Gray,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            )
-                            Surface(modifier = Modifier.weight(1f).height(1.dp), color = PolishOutline) {}
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Google Auth Button
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = PolishSurfaceVariant,
-                            border = BorderStroke(1.dp, PolishOutline),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .clickable { showGoogleAuthDialog = true }
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color.White,
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text(text = "G", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = Color(0xFF4285F4))
-                                    }
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = "Login via Google Auth",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PolishOnBackground
-                                )
+                        TextButton(
+                            onClick = {
+                                activeTab = AuthTab.REGISTER
+                                registerError = null
                             }
+                        ) {
+                            Text(
+                                text = "New user? Register an account here",
+                                color = PolishPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
+
                     } else {
-                        // REGISTER TAB
+                        // REGISTER FORM
                         Text(
                             text = "Register New Account",
                             style = MaterialTheme.typography.titleLarge,
@@ -376,7 +341,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                         )
 
                         Text(
-                            text = "Create your secure account to manage your finances.",
+                            text = "Fill in your details. Currency will be locked to this account.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Black,
                             fontWeight = FontWeight.Medium,
@@ -407,41 +372,132 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                         OutlinedTextField(
                             value = regName,
                             onValueChange = { regName = it; registerError = null },
-                            label = { Text("Full Name") },
+                            label = { Text("Name") },
                             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = PolishPrimary) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = regDob,
+                            onValueChange = { regDob = it; registerError = null },
+                            label = { Text("Date of Birth (DOB)") },
+                            leadingIcon = { Icon(Icons.Default.Cake, contentDescription = null, tint = PolishPrimary) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         OutlinedTextField(
                             value = regEmail,
                             onValueChange = { regEmail = it; registerError = null },
                             label = { Text("Email ID") },
                             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = PolishPrimary) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         OutlinedTextField(
                             value = regPhone,
                             onValueChange = { regPhone = it; registerError = null },
-                            label = { Text("Mobile Number") },
+                            label = { Text("Phone Number") },
                             leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = PolishPrimary) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Locked Currency Selection
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = PolishSurfaceVariant,
+                                border = BorderStroke(1.dp, PolishOutline),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { currencyDropdownOpen = true }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Public,
+                                            contentDescription = null,
+                                            tint = PolishPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = "Default Currency (Locked to User)",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.Black,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            Text(
+                                                text = "${regCurrency.country} - ${regCurrency.code} (${regCurrency.symbol})",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = PolishPrimary
+                                            )
+                                        }
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = PolishCreditGreen.copy(alpha = 0.15f)
+                                    ) {
+                                        Text(
+                                            text = "Select",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PolishCreditGreen,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            DropdownMenu(
+                                expanded = currencyDropdownOpen,
+                                onDismissRequest = { currencyDropdownOpen = false }
+                            ) {
+                                SupportedCurrency.ALL.forEach { c ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = "${c.country} (${c.code} ${c.symbol})",
+                                                    fontWeight = if (c.code == regCurrency.code) FontWeight.Bold else FontWeight.Normal
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            regCurrency = c
+                                            currencyDropdownOpen = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         OutlinedTextField(
                             value = regPassword,
                             onValueChange = { regPassword = it; registerError = null },
-                            label = { Text("Set Password") },
+                            label = { Text("Password") },
                             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = PolishPrimary) },
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -449,12 +505,12 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         OutlinedTextField(
                             value = regConfirmPassword,
                             onValueChange = { regConfirmPassword = it; registerError = null },
-                            label = { Text("Re-verify Password") },
+                            label = { Text("Confirm Password") },
                             leadingIcon = { Icon(Icons.Default.Security, contentDescription = null, tint = PolishPrimary) },
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -462,26 +518,31 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         Button(
                             onClick = {
-                                if (regName.isBlank() || regEmail.isBlank() || regPhone.isBlank() || regPassword.isBlank()) {
-                                    registerError = "Please fill in all mandatory profile fields!"
+                                if (regName.isBlank() || regEmail.isBlank() || regPhone.isBlank() || regPassword.isBlank() || regDob.isBlank()) {
+                                    registerError = "Please fill in all mandatory fields!"
                                 } else if (regPassword != regConfirmPassword) {
-                                    registerError = "Passwords do not match! Please check Re-verify Password field."
+                                    registerError = "Passwords do not match! Please check Confirm Password."
                                 } else {
                                     val err = viewModel.registerUser(
                                         name = regName,
+                                        dob = regDob,
                                         email = regEmail,
                                         phone = regPhone,
-                                        dob = regDob,
-                                        password = regPassword
+                                        password = regPassword,
+                                        currency = regCurrency
                                     )
                                     if (err != null) {
                                         registerError = err
                                     } else {
-                                        Toast.makeText(context, "Registration Successful! Profile & Auto-Location Presynced.", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(
+                                            context,
+                                            "Registered successfully! Currency locked to ${regCurrency.code} (${regCurrency.symbol})",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
                                 }
                             },
@@ -489,7 +550,7 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
+                                .height(52.dp)
                         ) {
                             Text(
                                 text = "Create & Register Account",
@@ -498,40 +559,28 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                                 color = PolishOnPrimary
                             )
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    // Demo / Guest login option
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.loginWithGoogle(
-                                name = "Guest User",
-                                email = "guest@vaultexpense.app",
-                                phone = "+91 98765 43210",
-                                dob = "2000-01-01",
-                                location = "Bengaluru, India"
+                        TextButton(
+                            onClick = {
+                                activeTab = AuthTab.LOGIN
+                                loginError = null
+                            }
+                        ) {
+                            Text(
+                                text = "Already have an account? Sign In",
+                                color = PolishPrimary,
+                                fontWeight = FontWeight.Bold
                             )
-                            Toast.makeText(context, "Logged in as Guest User", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(44.dp),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Text(
-                            text = "Continue as Demo Guest",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PolishPrimary
-                        )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Security Badge
+            // Security Encryption Indicator
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -545,195 +594,11 @@ fun LoginScreen(viewModel: FinanceViewModel) {
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Protected with 256-bit AES Encryption",
+                    text = "Encrypted Local & Cloud Vault • Offline Ready",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Black,
                     fontWeight = FontWeight.SemiBold
                 )
-            }
-        }
-    }
-
-    if (showGoogleAuthDialog) {
-        GoogleSignInBottomSheet(
-            viewModel = viewModel,
-            onDismiss = { showGoogleAuthDialog = false },
-            onSuccess = { name, email, phone, dob, location ->
-                viewModel.loginWithGoogle(name, email, phone, dob, location)
-                showGoogleAuthDialog = false
-                Toast.makeText(context, "Signed in via Google as $name", Toast.LENGTH_SHORT).show()
-            }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun GoogleSignInBottomSheet(
-    viewModel: FinanceViewModel,
-    onDismiss: () -> Unit,
-    onSuccess: (name: String, email: String, phone: String, dob: String, location: String) -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    var name by remember { mutableStateOf(viewModel.userName.value) }
-    var email by remember { mutableStateOf(viewModel.userEmail.value) }
-    var phone by remember { mutableStateOf(viewModel.userPhone.value) }
-    var dob by remember { mutableStateOf(viewModel.userDob.value) }
-    var location by remember { mutableStateOf(viewModel.userLocation.value) }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = PolishBackground
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color.White,
-                    border = BorderStroke(1.dp, PolishOutline),
-                    modifier = Modifier.size(44.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "G",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 24.sp,
-                            color = Color(0xFF4285F4)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = "Google Sign-In",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = PolishOnBackground
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = PolishCreditGreen,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Google Identity Verified",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PolishCreditGreen,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "Confirm Account & Profile Details:",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = PolishOnBackground
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Full Name") },
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = PolishPrimary) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Google Email ID") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = PolishPrimary) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("Phone Number") },
-                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = PolishPrimary) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedTextField(
-                value = dob,
-                onValueChange = { dob = it },
-                label = { Text("Date of Birth (YYYY-MM-DD)") },
-                leadingIcon = { Icon(Icons.Default.Cake, contentDescription = null, tint = PolishPrimary) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text("Location (Auto-saved GPS)") },
-                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = PolishPrimary) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    if (name.isNotBlank() && email.isNotBlank()) {
-                        onSuccess(name, email, phone, dob, location.ifBlank { "Bengaluru, India" })
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "Continue with Google Account",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PolishOnPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cancel", color = PolishOnBackground, fontWeight = FontWeight.Bold)
             }
         }
     }

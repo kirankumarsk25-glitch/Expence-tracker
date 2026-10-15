@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -19,8 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -49,12 +49,14 @@ import com.example.ui.theme.PolishCreditGreen
 import com.example.ui.theme.PolishDebitRed
 import com.example.ui.theme.PolishOnBackground
 import com.example.ui.theme.PolishOnPrimary
+import com.example.ui.theme.PolishOutline
 import com.example.ui.theme.PolishPrimary
 import com.example.ui.theme.PolishSurfaceVariant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionBottomSheet(
+    lockedCurrency: SupportedCurrency,
     onDismiss: () -> Unit,
     onSubmit: (
         title: String,
@@ -71,14 +73,28 @@ fun AddTransactionBottomSheet(
     var title by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(TransactionType.DEBIT) }
-    var selectedCategory by remember { mutableStateOf(ExpenseCategory.SHOPPING) }
-    var selectedCurrency by remember { mutableStateOf(SupportedCurrency.USD) }
+
+    // Dynamic category and payment methods based on type
+    val currentCategories = if (selectedType == TransactionType.CREDIT) {
+        ExpenseCategory.creditCategories
+    } else {
+        ExpenseCategory.debitCategories
+    }
+
+    var selectedCategory by remember(selectedType) {
+        mutableStateOf(currentCategories.first())
+    }
+
+    val creditPaymentMethods = listOf("Bank Transfer", "Cash", "UPI")
+    val debitPaymentMethods = listOf("UPI", "Cash", "Bank Transfer", "Debit Card", "Credit Card")
+
+    val currentPaymentMethods = if (selectedType == TransactionType.CREDIT) creditPaymentMethods else debitPaymentMethods
+
+    var paymentMethod by remember(selectedType) {
+        mutableStateOf(currentPaymentMethods.first())
+    }
+
     var note by remember { mutableStateOf("") }
-    var paymentMethod by remember { mutableStateOf("Credit Card") }
-
-    var currencyDropdownExpanded by remember { mutableStateOf(false) }
-
-    val paymentMethods = listOf("Credit Card", "Debit Card", "Bank Transfer", "Cash", "Digital Wallet")
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -88,7 +104,7 @@ fun AddTransactionBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
@@ -100,7 +116,7 @@ fun AddTransactionBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Transaction Type Selector Tabs
+            // Transaction Type Selector Tabs (Only Credit and Debit - No Transfer)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -108,30 +124,50 @@ fun AddTransactionBottomSheet(
                     .background(PolishSurfaceVariant)
                     .padding(4.dp)
             ) {
-                TransactionType.entries.forEach { type ->
-                    val isSelected = selectedType == type
-                    val backgroundColor = if (isSelected) {
-                        when (type) {
-                            TransactionType.CREDIT -> PolishCreditGreen
-                            TransactionType.DEBIT -> PolishDebitRed
-                            TransactionType.TRANSFER -> PolishPrimary
+                // Debit Button
+                val isDebit = selectedType == TransactionType.DEBIT
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isDebit) PolishDebitRed else Color.Transparent,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            selectedType = TransactionType.DEBIT
                         }
-                    } else Color.Transparent
-
+                ) {
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(backgroundColor)
-                            .clickable { selectedType = type }
-                            .padding(vertical = 10.dp),
+                        modifier = Modifier.padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = type.displayName.split("/").first().trim(),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.White else PolishOnBackground
+                            text = "Debit (Expense)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDebit) Color.White else PolishOnBackground
+                        )
+                    }
+                }
+
+                // Credit Button
+                val isCredit = selectedType == TransactionType.CREDIT
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isCredit) PolishCreditGreen else Color.Transparent,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            selectedType = TransactionType.CREDIT
+                        }
+                ) {
+                    Box(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Credit (Income)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isCredit) Color.White else PolishOnBackground
                         )
                     }
                 }
@@ -139,43 +175,26 @@ fun AddTransactionBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Amount Input with Currency Dropdown
+            // Amount Input with locked currency indicator
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = PolishSurfaceVariant,
-                        modifier = Modifier.clickable { currencyDropdownExpanded = true }
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = PolishSurfaceVariant,
+                    border = BorderStroke(1.dp, PolishOutline)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${selectedCurrency.code} (${selectedCurrency.symbol})",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = PolishPrimary
-                            )
-                        }
-                    }
-
-                    DropdownMenu(
-                        expanded = currencyDropdownExpanded,
-                        onDismissRequest = { currencyDropdownExpanded = false }
-                    ) {
-                        SupportedCurrency.ALL.forEach { curr ->
-                            DropdownMenuItem(
-                                text = { Text("${curr.code} - ${curr.name} (${curr.symbol})") },
-                                onClick = {
-                                    selectedCurrency = curr
-                                    currencyDropdownExpanded = false
-                                }
-                            )
-                        }
+                        Text(
+                            text = "${lockedCurrency.code} (${lockedCurrency.symbol})",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PolishPrimary
+                        )
                     }
                 }
 
@@ -184,58 +203,78 @@ fun AddTransactionBottomSheet(
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
-                    label = { Text("Amount") },
+                    label = { Text("Amount (${lockedCurrency.symbol})") },
+                    placeholder = { Text("0.00") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("Transaction Title / Payee") },
+                placeholder = {
+                    Text(if (selectedType == TransactionType.CREDIT) "e.g., Monthly Salary, Client Transfer" else "e.g., Grocery Shopping, Petrol, Dinner")
+                },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            Text(
-                text = "Select Category",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = PolishOnBackground
-            )
+            // Category Selection Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Select Category (${if (selectedType == TransactionType.CREDIT) "Credit" else "Debit"})",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = PolishOnBackground
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = selectedCategory.title,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PolishPrimary
+                )
+            }
 
-            // Category Horizontal Selector
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Categories LazyRow Chips
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(ExpenseCategory.entries) { category ->
+                items(currentCategories) { category ->
                     val isSelected = selectedCategory == category
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         color = if (isSelected) Color(category.colorHex) else PolishSurfaceVariant,
+                        border = if (isSelected) BorderStroke(1.5.dp, Color.White) else BorderStroke(1.dp, PolishOutline),
                         modifier = Modifier.clickable { selectedCategory = category }
                     ) {
                         Text(
                             text = category.title,
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) Color.White else PolishOnBackground,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
+            // Payment Method Header
             Text(
                 text = "Payment Method",
                 style = MaterialTheme.typography.labelLarge,
@@ -243,33 +282,36 @@ fun AddTransactionBottomSheet(
                 color = PolishOnBackground
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
+            // Payment Methods LazyRow
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(paymentMethods) { method ->
+                items(currentPaymentMethods) { method ->
                     val isSelected = paymentMethod == method
                     Surface(
                         shape = RoundedCornerShape(20.dp),
                         color = if (isSelected) PolishPrimary else PolishSurfaceVariant,
+                        border = BorderStroke(1.dp, if (isSelected) PolishPrimary else PolishOutline),
                         modifier = Modifier.clickable { paymentMethod = method }
                     ) {
                         Text(
                             text = method,
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = if (isSelected) Color.White else PolishOnBackground,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             OutlinedTextField(
                 value = note,
                 onValueChange = { note = it },
-                label = { Text("Notes / Tags (Optional)") },
+                label = { Text("Notes / Reference (Optional)") },
+                placeholder = { Text("Bill number, item details, remarks...") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -294,17 +336,24 @@ fun AddTransactionBottomSheet(
                                 parsedAmount,
                                 selectedType,
                                 selectedCategory,
-                                selectedCurrency,
+                                lockedCurrency,
                                 note,
                                 paymentMethod
                             )
                             onDismiss()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PolishPrimary),
-                    shape = RoundedCornerShape(12.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedType == TransactionType.CREDIT) PolishCreditGreen else PolishPrimary
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.height(48.dp)
                 ) {
-                    Text("Save Transaction", fontWeight = FontWeight.Bold, color = PolishOnPrimary)
+                    Text(
+                        text = if (selectedType == TransactionType.CREDIT) "+ Save Credit Transaction" else "- Save Debit Expense",
+                        fontWeight = FontWeight.Bold,
+                        color = PolishOnPrimary
+                    )
                 }
             }
         }
